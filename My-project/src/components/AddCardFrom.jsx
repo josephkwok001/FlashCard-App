@@ -1,31 +1,31 @@
 import { useState } from 'react';
 
 function AddCardForm({ addCard }) {
-    const [koreanWord, setKoreanWord] = useState('');
-    const [englishWord, setEnglishWord] = useState('');
+    const [front, setFront] = useState('');
+    const [back, setBack] = useState('');
 
     function handleSubmit() {
-        addCard(koreanWord, englishWord);
+        addCard(front, back);
 
         // Clear the inputs after submitting
-        setKoreanWord('');
-        setEnglishWord('');
+        setFront('');
+        setBack('');
     }
 
     return (
         <div className="add-card-form">
             <h3>Add New Card</h3>
             <input
-                value={koreanWord}
-                onChange={(e) => setKoreanWord(e.target.value)}
+                value={front}
+                onChange={(e) => setFront(e.target.value)}
                 type="text"
-                placeholder="Korean word"
+                placeholder="Front"
             />
             <input
-                value={englishWord}
-                onChange={(e) => setEnglishWord(e.target.value)}
+                value={back}
+                onChange={(e) => setBack(e.target.value)}
                 type="text"
-                placeholder="English translation"
+                placeholder="Back"
             />
             <button onClick={handleSubmit}>Add flashcard</button>
         </div>

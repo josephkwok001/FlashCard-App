@@ -22,36 +22,40 @@ function CardList({ cards, deleteCard, editCard }) {
 
 
   return (
-    <div>
-      <h2>My Flashcards ({cards.length})</h2>
-      <ul>
-        {cards.map(card => (
-          <li key={card.id}>
-            {editingId === card.id ? (
-              <>
-                <input
-                  value={editFront}
-                  onChange={(e) => setEditFront(e.target.value)}
-                />
-                <input
-                  value={editBack}
-                  onChange={(e) => setEditBack(e.target.value)}
-                />
+  <div className="card-list-container">
+    <h2>My Flashcards ({cards.length})</h2>
+    <ul>
+      {cards.map(card => (
+        <li key={card.id}>
+          {editingId === card.id ? (
+            <>
+              <input
+                value={editFront}
+                onChange={(e) => setEditFront(e.target.value)}
+              />
+              <input
+                value={editBack}
+                onChange={(e) => setEditBack(e.target.value)}
+              />
+              <div className="card-actions">
                 <button onClick={() => saveEdit(card.id)}>Save</button>
                 <button onClick={cancelEdit}>Cancel</button>
-              </>
-            ) : (
-              <>
-                {card.front} - {card.back}
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="card-content">{card.front} - {card.back}</span>
+              <div className="card-actions">
                 <button onClick={() => startEdit(card)}>Edit</button>
                 <button onClick={() => deleteCard(card.id)}>Delete</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+              </div>
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 }
 
 

@@ -33,10 +33,13 @@ body {
     margin: 30px 0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     border-radius: 20px;
-
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .card-display {
+    align-self: stretch;
     background: #f8f9fa;
     border-radius: 15px;
     padding: 60px 40px;
@@ -50,7 +53,6 @@ body {
     color: #333;
     cursor: pointer;
     transition: transform 0.2s;
-
 }
 
 .card-display:hover {
@@ -118,4 +120,134 @@ button:active {
 .add-card-form input:focus {
   outline: none;
   border-color: #667eea;
+}
+
+/* Card List */
+.card-list-container {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.card-list-container h2 {
+  color: #667eea;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+}
+
+.card-list-container ul {
+  list-style: none;
+}
+
+.card-list-container li {
+  background: #f8f9fa;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.3s;
+}
+
+.card-list-container li:hover {
+  background: #e9ecef;
+}
+
+.card-content {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.card-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.card-actions button {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.study-section {
+  margin-top: 1rem;
+}
+
+.study-mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.study-mode-toggle button.active {
+  font-weight: 600;
+  background: #333;
+  color: #fff;
+}
+
+/* Spaced repetition quality colours: red → yellow → light green → green */
+.quality-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.study-nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Override global button styles; scoped so colours show */
+.study-card-container .quality-again,
+.study-card-container .quality-hard,
+.study-card-container .quality-good,
+.study-card-container .quality-easy {
+  border: none;
+}
+
+.study-card-container .quality-again {
+  background: #dc3545;
+  color: #fff;
+}
+
+.study-card-container .quality-hard {
+  background: #ffc107;
+  color: #212529;
+}
+
+.study-card-container .quality-good {
+  background: #90ee90;
+  color: #212529;
+}
+
+.study-card-container .quality-easy {
+  background: #28a745;
+  color: #fff;
+}
+
+/* Keep colours on hover instead of global purple */
+.study-card-container .quality-again:hover {
+  background: #c82333;
+  color: #fff;
+}
+
+.study-card-container .quality-hard:hover {
+  background: #e0a800;
+  color: #212529;
+}
+
+.study-card-container .quality-good:hover {
+  background: #7ed957;
+  color: #212529;
+}
+
+.study-card-container .quality-easy:hover {
+  background: #218838;
+  color: #fff;
 }
