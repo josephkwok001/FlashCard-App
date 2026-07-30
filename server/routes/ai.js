@@ -26,7 +26,8 @@ router.post('/suggest', auth, async (req, res) => {
         'X-Title': 'Flashcard App'
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
+        // Still OpenRouter — just a different model ID (gpt-4o-mini is region-blocked)
+        model: 'deepseek/deepseek-chat-v3-0324',
         messages: [{
           role: 'user',
           content: `You are a flashcard assistant. Given a word or phrase, reply with only a short, clear definition or translation suitable for the back of a flashcard. No extra explanation.

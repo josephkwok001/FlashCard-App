@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext, useMemo } from 'react';
+import api from '../services/api.js';
 
 // Step 1: Create the context (the "bulletin board")
 const CardContext = createContext();
@@ -6,74 +7,53 @@ const CardContext = createContext();
 // Step 2: Create a Provider component that holds all the card data and logic
 function CardProvider({ children }) {
 
-  // children refers to everything that you put inside <CardProvider> in App.jsx renders here
-  const [cards, setCards] = useState(() => {
-    const savedCards = localStorage.getItem('flashcards');
-
-    if (savedCards) {
-      try {
-        const parsed = JSON.parse(savedCards);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      } catch {
-        // ignore corrupt or legacy data
-      }
-    }
-
-    return [
-      {
-        id: "1",
-        front: "Hello",
-        back: "A greeting",
-        easeFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReview: new Date().toISOString()
-      },
-      {
-        id: "2",
-        front: "Thank you",
-        back: "Expression of gratitude",
-        easeFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReview: new Date().toISOString()
-      },
-      {
-        id: "3",
-        front: "Yes",
-        back: "Affirmative response",
-        easeFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReview: new Date().toISOString()
-      },
-      {
-        id: "4",
-        front: "No",
-        back: "Negative response",
-        easeFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReview: new Date().toISOString()
-      }
-    ];
-  });
-
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [studyAllMode, setStudyAllMode] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('flashcards', JSON.stringify(cards));
-  }, [cards]);
+    initCards();
+  }, []);
+
+  async function initCards() {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.ensureAuth();
+      const data = await api.getCards();
+      setCards(data);
+    } catch (err) {
+      console.error('Failed to load cards:', err);
+      setError(err.message || 'Failed to load cards');
+      setCards([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadCards() {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.getCards();
+      setCards(data);
+    } catch (err) {
+      console.error('Failed to load cards:', err);
+      setError(err.message || 'Failed to load cards');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Helper to update cards locally (optimistic updates)
+  const updateCardsLocally = (updater) => {
+    setCards(prev => updater(prev));
+  };
 
   function addCard(front, back) {
-    // randomUUID avoids id collisions from rapid clicks and keeps ids
-    // as strings, matching the seed cards above.
-    const newId =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8);
+    // Optimistic update
+    const newId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8);
 
     const newCard = {
       id: newId,
@@ -84,23 +64,53 @@ function CardProvider({ children }) {
       repetitions: 0,
       nextReview: new Date().toISOString()
     };
-    setCards(prev => [...prev, newCard]);
+
+    updateCardsLocally(prev => [...prev, newCard]);
+
+    // Sync with backend
+    api.createCard(front, back)
+      .then(createdCard => {
+        // Update with server response (includes _id)
+        setCards(prev => prev.map(c => c.id === newId ? createdCard : c));
+      })
+      .catch(err => {
+        console.error('Failed to create card:', err);
+        setError(err.message);
+      });
   }
 
   function deleteCard(id) {
-    setCards(prev => prev.filter(card => card.id !== id));
+    // Optimistic update
+    updateCardsLocally(prev => prev.filter(card => card.id !== id));
+
+    // Sync with backend
+    api.deleteCard(id)
+      .catch(err => {
+        console.error('Failed to delete card:', err);
+        setError(err.message);
+        // Could implement rollback here
+      });
   }
 
   function editCard(id, newFront, newBack) {
-    setCards(prev => prev.map(card =>
+    // Optimistic update
+    updateCardsLocally(prev => prev.map(card =>
       card.id === id
         ? { ...card, front: newFront, back: newBack }
         : card
     ));
+
+    // Sync with backend
+    api.updateCard(id, newFront, newBack)
+      .catch(err => {
+        console.error('Failed to edit card:', err);
+        setError(err.message);
+      });
   }
 
-  function updateCardReview(cardId, quality) {
-    setCards(prevCards => prevCards.map(card => {
+  async function updateCardReview(cardId, quality) {
+    // Optimistic update
+    updateCardsLocally(prevCards => prevCards.map(card => {
       if (card.id !== cardId) return card;
 
       let { easeFactor, interval, repetitions } = card;
@@ -138,6 +148,13 @@ function CardProvider({ children }) {
         nextReview: nextReview.toISOString()
       };
     }));
+
+    // Sync with backend
+    api.rateCard(cardId, quality)
+      .catch(err => {
+        console.error('Failed to rate card:', err);
+        setError(err.message);
+      });
   }
 
   const dueCards = useMemo(() => {
@@ -158,6 +175,9 @@ function CardProvider({ children }) {
       deleteCard,
       editCard,
       updateCardReview,
+      loading,
+      error,
+      reloadCards: loadCards
     }}>
       {children}
     </CardContext.Provider>
@@ -165,7 +185,7 @@ function CardProvider({ children }) {
 }
 
 function useCards() {
-  return useContext(CardContext); 
+  return useContext(CardContext);
 }
 // Step 3: Custom hook -- a shortcut so components don't have to import both CardContext and useContext
 // this is instead of prop handling, where you pass multiple props from the parent to the child
