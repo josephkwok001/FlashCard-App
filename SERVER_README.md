@@ -8,7 +8,42 @@ This is the backend API for the flashcard application with spaced repetition.
 - MongoDB running locally or a MongoDB Atlas connection string
 - (Optional) OpenRouter API key for AI-powered card suggestions
 
+## MongoDB Atlas setup (recommended)
+
+1. Go to [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas) and sign up (free tier is fine).
+2. Create a **free cluster** (M0). Pick a cloud region close to you.
+3. **Database Access** → Add New Database User:
+   - Authentication: Password
+   - Pick a username and password (save these — you need them for the connection string)
+   - Built-in role: `Atlas admin` or `readWriteAnyDatabase` for dev
+4. **Network Access** → Add IP Address:
+   - For development: **Allow Access from Anywhere** (`0.0.0.0/0`)
+   - (Tighten this in production)
+5. **Database** → your cluster → **Connect** → **Drivers**:
+   - Driver: Node.js, version 5.5 or later
+   - Copy the connection string. It looks like:
+     ```
+     mongodb+srv://myuser:<password>@cluster0.xxxxx.mongodb.net/
+     ```
+6. Edit the string:
+   - Replace `<password>` with your real database user password
+   - Add the database name `flashcards` before the query string (or at the end of the path):
+     ```
+     mongodb+srv://myuser:MyPass123@cluster0.xxxxx.mongodb.net/flashcards
+     ```
+   - If the password has special characters (`@`, `#`, `:`, etc.), [URL-encode them](https://www.urlencoder.org/).
+7. Put it in `.env`:
+   ```
+   MONGODB_URI=mongodb+srv://myuser:MyPass123@cluster0.xxxxx.mongodb.net/flashcards
+   ```
+8. Start the server and confirm you see `MongoDB Connected`:
+   ```bash
+   npm run dev:server
+   ```
+
 ## Setup
+
+> **macOS note:** Port 5000 is often used by AirPlay Receiver. This project defaults to **port 5001** instead.
 
 1. **Create `.env` file** from the example:
    ```bash
@@ -64,13 +99,7 @@ The ease factor adjusts based on your performance (minimum 1.3).
 
 ## Development
 
-1. Start MongoDB:
-   ```bash
-   # On Mac with Homebrew
-   brew services start mongodb-community
-   
-   # Or use MongoDB Atlas connection string in .env
-   ```
+1. Set `MONGODB_URI` in `.env` (see **MongoDB Atlas setup** above).
 
 2. Run both server and client:
    ```bash
