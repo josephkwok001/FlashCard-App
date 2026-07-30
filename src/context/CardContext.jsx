@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react';
-import CardList from './components/CardList';
-import AddCardFrom from './components/AddCardFrom';
-import StudyCard from './components/StudyCard';
+import { createContext, useState, useEffect, useContext, useMemo } from 'react';
 
-function App() {
+// Step 1: Create the context (the "bulletin board")
+const CardContext = createContext();
 
+// Step 2: Create a Provider component that holds all the card data and logic
+function CardProvider({ children }) {
+
+  // children refers to everything that you put inside <CardProvider> in App.jsx renders here
   const [cards, setCards] = useState(() => {
     const savedCards = localStorage.getItem('flashcards');
 
     if (savedCards) {
-      return JSON.parse(savedCards);
+      try {
+        const parsed = JSON.parse(savedCards);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // ignore corrupt or legacy data
+      }
     }
 
     return [
@@ -52,23 +61,29 @@ function App() {
     ];
   });
 
-  useEffect(() => {
-    // Save cards to localStorage whenever cards change
-    localStorage.setItem('flashcards', JSON.stringify(cards));
-  }, [cards]);  // This means "run this whenever cards changes"
+  const [studyAllMode, setStudyAllMode] = useState(false);
 
+  useEffect(() => {
+    localStorage.setItem('flashcards', JSON.stringify(cards));
+  }, [cards]);
 
   function addCard(front, back) {
+    // randomUUID avoids id collisions from rapid clicks and keeps ids
+    // as strings, matching the seed cards above.
+    const newId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8);
+
     const newCard = {
-      id: Date.now(),
+      id: newId,
       front,
       back,
-      easeFactor: 2.5,      // Add this
-      interval: 0,          // Add this
-      repetitions: 0,       // Add this
-      nextReview: new Date().toISOString()  // Add this
+      easeFactor: 2.5,
+      interval: 0,
+      repetitions: 0,
+      nextReview: new Date().toISOString()
     };
-
     setCards(prev => [...prev, newCard]);
   }
 
@@ -86,25 +101,19 @@ function App() {
 
   function updateCardReview(cardId, quality) {
     setCards(prevCards => prevCards.map(card => {
-      // Only update the card that matches the ID
       if (card.id !== cardId) return card;
 
-      // Get current values
       let { easeFactor, interval, repetitions } = card;
 
-      // Calculate new ease factor
       easeFactor = easeFactor + (0.1 - (3 - quality) * (0.08 + (3 - quality) * 0.02));
       if (easeFactor < 1.3) {
         easeFactor = 1.3;
       }
 
-      // Calculate new repetitions and interval
       if (quality < 2) {
-        // Wrong answer - reset
         repetitions = 0;
         interval = 1;
       } else {
-        // Correct answer
         repetitions = repetitions + 1;
 
         if (repetitions === 1) {
@@ -116,61 +125,49 @@ function App() {
         }
       }
 
-      // Calculate next review date: for "Again" keep it due today so the card stays in the list
       const nextReview = new Date();
       if (quality >= 2) {
         nextReview.setDate(nextReview.getDate() + interval);
       }
-      // else: nextReview stays "now" so the card remains due and will show again
 
-      // Return updated card
       return {
         ...card,
-        easeFactor: easeFactor,
-        interval: interval,
-        repetitions: repetitions,
+        easeFactor,
+        interval,
+        repetitions,
         nextReview: nextReview.toISOString()
       };
     }));
   }
 
-  const dueCards = cards.filter(
-    card => new Date(card.nextReview) <= new Date()
-  );
+  const dueCards = useMemo(() => {
+    return cards.filter(card => new Date(card.nextReview) <= new Date());
+  }, [cards]);
 
-  const [studyAllMode, setStudyAllMode] = useState(false);
   const cardsToStudy = studyAllMode ? cards : dueCards;
 
+  // Everything inside "value" is what any child component can access
+  // this is the component react's context system recognizes
   return (
-    <div className="app-container">
-      <h1>Flashcards</h1>
-      <AddCardFrom addCard={addCard} />
-      <CardList cards={cards} deleteCard={deleteCard} editCard={editCard} />
-      <div className="study-section">
-        <div className="study-mode-toggle">
-          <button
-            type="button"
-            onClick={() => setStudyAllMode(false)}
-            className={!studyAllMode ? 'active' : ''}
-          >
-            Due today
-          </button>
-          <button
-            type="button"
-            onClick={() => setStudyAllMode(true)}
-            className={studyAllMode ? 'active' : ''}
-          >
-            Study all
-          </button>
-        </div>
-        <StudyCard
-          cards={cardsToStudy}
-          updateCardReview={updateCardReview}
-          studyAllMode={studyAllMode}
-        />
-      </div>
-    </div>
+    <CardContext.Provider value={{
+      cards,
+      cardsToStudy,
+      studyAllMode,
+      setStudyAllMode,
+      addCard,
+      deleteCard,
+      editCard,
+      updateCardReview,
+    }}>
+      {children}
+    </CardContext.Provider>
   );
 }
 
-export default App;
+function useCards() {
+  return useContext(CardContext); 
+}
+// Step 3: Custom hook -- a shortcut so components don't have to import both CardContext and useContext
+// this is instead of prop handling, where you pass multiple props from the parent to the child
+
+export { CardProvider, useCards };

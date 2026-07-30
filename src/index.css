@@ -1,0 +1,658 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* ─── Layout ─── */
+
+.app-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+}
+
+.app-container h1 {
+    text-align: center;
+    color: white;
+    font-size: 2.4rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.5px;
+}
+
+/* ─── Nav Bar ─── */
+
+.nav-bar {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 6px;
+    border-radius: 12px;
+}
+
+.nav-bar a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    transition: all 0.25s;
+    flex: 1;
+    text-align: center;
+}
+
+.nav-bar a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-bar a.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Study Card ─── */
+
+.study-card-container {
+    background: white;
+    text-align: center;
+    padding: 32px;
+    margin: 20px 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.study-card-container > p {
+    color: #888;
+    font-size: 1.1rem;
+    padding: 40px 0;
+}
+
+/* 3D Flip card */
+.card-flip-wrapper {
+    align-self: stretch;
+    perspective: 1000px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.card-flip-inner {
+    position: relative;
+    min-height: 220px;
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+}
+
+.card-flip-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+.card-flip-front,
+.card-flip-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+}
+
+.card-flip-front {
+    background: linear-gradient(145deg, #f0f2ff, #e8eaff);
+    border: 1px solid #ddd;
+}
+
+.card-flip-back {
+    background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+    border: 1px solid #bbf7d0;
+    transform: rotateY(180deg);
+}
+
+.card-flip-front p,
+.card-flip-back p {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.card-flip-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #999;
+    margin-bottom: 12px;
+}
+
+.card-flip-hint {
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-top: 16px;
+}
+
+.card-counter {
+    color: #999;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+/* ─── Buttons (global defaults) ─── */
+
+button {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 10px 20px;
+    margin: 4px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ─── Study Mode Toggle ─── */
+
+.study-mode-toggle {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.study-mode-toggle button {
+    flex: 1;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.study-mode-toggle button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    transform: none;
+    box-shadow: none;
+}
+
+.study-mode-toggle button.active {
+    background: white;
+    color: #667eea;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Quality Buttons ─── */
+
+.quality-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.quality-buttons button {
+    flex: 1;
+    margin: 0;
+    padding: 12px 8px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: none;
+    color: white;
+}
+
+.study-card-container .quality-again { background: #ef4444; }
+.study-card-container .quality-hard  { background: #f59e0b; color: #212529; }
+.study-card-container .quality-good  { background: #22c55e; }
+.study-card-container .quality-easy  { background: #10b981; }
+
+.study-card-container .quality-again:hover { background: #dc2626; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+.study-card-container .quality-hard:hover  { background: #d97706; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); }
+.study-card-container .quality-good:hover  { background: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4); }
+.study-card-container .quality-easy:hover  { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+
+.study-nav-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.study-nav-buttons button {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+}
+
+/* ─── Add Card Form ─── */
+
+.add-card-form {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.add-card-form h3 {
+    color: #667eea;
+    margin-bottom: 18px;
+    font-size: 1.3rem;
+}
+
+.add-card-form input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fafafa;
+}
+
+.add-card-form input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: white;
+}
+
+.add-card-form button {
+    width: 100%;
+    margin: 4px 0 0 0;
+    padding: 12px;
+}
+
+.form-error {
+    margin: 10px 0 0 0;
+    padding: 10px 12px;
+    background: #fdecea;
+    color: #b3261e;
+    border: 1px solid #f5c2bd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* ─── Card List ─── */
+
+.card-list-container {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.card-list-container h2 {
+    color: #333;
+    margin-bottom: 18px;
+    font-size: 1.4rem;
+}
+
+.card-list-container h2 span {
+    color: #999;
+    font-weight: 400;
+    font-size: 1rem;
+}
+
+.card-list-container ul {
+    list-style: none;
+}
+
+.card-list-container li {
+    background: #f8f9fa;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+}
+
+.card-list-container li:hover {
+    background: #f0f2ff;
+    border-color: #e0e4ff;
+}
+
+.card-list-container li:last-child {
+    margin-bottom: 0;
+}
+
+
+.card-list-filter-row {
+    background: #fafafa;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 10px; 
+    margin-bottom: 10px; 
+    display: block;
+}
+
+.card-list-filter-label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #667eea;
+    display: block;
+}
+.card-list-filter-input {
+    font-size: 1rem;
+    background: #fafafa;
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.card-list-filter-input:focus {
+    outline: none;
+    border-color: #667eea; 
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: white;
+}
+
+.card-content {
+    flex: 1;
+    font-size: 1rem;
+    color: #333;
+}
+
+.card-content .card-front {
+    font-weight: 600;
+}
+
+.card-content .card-separator {
+    color: #ccc;
+    margin: 0 10px;
+}
+
+.card-content .card-back {
+    color: #666;
+}
+
+.card-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: 12px;
+}
+
+.card-actions button {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.card-actions .btn-delete {
+    color: #ef4444;
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.card-actions .btn-delete:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.delete-confirm-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.delete-confirm-label {
+    color: #444;
+    font-weight: 600;
+}
+
+.card-actions .btn-delete-confirm,
+.card-actions .btn-delete-cancel {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+.card-actions .btn-delete-confirm {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    
+}
+
+.card-actions .btn-delete-cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #e5e7eb;
+}
+
+.card-edit-inputs {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+}
+
+.card-edit-inputs input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.card-edit-inputs input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* ─── Statistics ─── */
+
+
+
+.stats-container {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin: 20px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+
+.stats-container h2 {
+    color: #333;
+    margin-bottom: 18px;
+    font-size: 1.4rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.stats-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #f0f0f0;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stats-card span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #999;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #667eea;
+}
+
+/* ─── 404 Page ─── */
+
+.not-found {
+    background: white;
+    border-radius: 16px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.not-found h2 {
+    font-size: 6rem;
+    color: #667eea;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.not-found p {
+    font-size: 1.2rem;
+    color: #888;
+    margin-bottom: 28px;
+}
+
+.not-found a {
+    display: inline-block;
+    color: white;
+    background: #667eea;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.not-found a:hover {
+    background: #5a6fd6;
+    transform: translateY(-1px);
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 600px) {
+    .app-container {
+        padding: 24px 14px 40px;
+    }
+
+    .app-container h1 {
+        font-size: 1.8rem;
+        margin-bottom: 14px;
+    }
+
+    .nav-bar a {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .study-card-container {
+        padding: 20px;
+    }
+
+    .card-flip-front p,
+    .card-flip-back p {
+        font-size: 1.8rem;
+    }
+
+    .card-flip-front,
+    .card-flip-back {
+        padding: 30px 20px;
+    }
+
+    .quality-buttons {
+        flex-wrap: wrap;
+    }
+
+    .quality-buttons button {
+        flex: 1 1 40%;
+    }
+
+    .study-nav-buttons {
+        flex-wrap: wrap;
+    }
+
+    .study-nav-buttons button {
+        flex: 1;
+    }
+
+    .card-list-container li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .card-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .card-actions button {
+        flex: 1;
+    }
+
+    .card-edit-inputs {
+        flex-direction: column;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
