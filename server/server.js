@@ -39,20 +39,9 @@ app.use('*', (_req, res) => {
 });
 
 async function startServer() {
-  // #region agent log
-  fetch('http://127.0.0.1:7625/ingest/29d72b27-fbbc-46f6-b04e-30b518f2d130',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'de8c73'},body:JSON.stringify({sessionId:'de8c73',hypothesisId:'E',location:'server/server.js:42',message:'startServer entry',data:{port:PORT,hasMongoUri:Boolean(process.env.MONGODB_URI),nodeVersion:process.version},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   await connectDB();
 
-  // #region agent log
-  fetch('http://127.0.0.1:7625/ingest/29d72b27-fbbc-46f6-b04e-30b518f2d130',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'de8c73'},body:JSON.stringify({sessionId:'de8c73',hypothesisId:'E',location:'server/server.js:48',message:'connectDB resolved — about to call app.listen',data:{port:PORT},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   const server = app.listen(PORT, () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7625/ingest/29d72b27-fbbc-46f6-b04e-30b518f2d130',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'de8c73'},body:JSON.stringify({sessionId:'de8c73',hypothesisId:'E',location:'server/server.js:54',message:'app.listen SUCCESS — server is accepting requests',data:{port:PORT},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     console.log(`Server running on port ${PORT}`);
   });
 
