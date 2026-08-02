@@ -62,6 +62,9 @@ const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ front, back })
     });
+    
+    //  sends POST http://localhost:5001/api/cards with JSON { front, back } and a JWT
+
     if (!response.ok) throw new Error('Failed to create card');
     return normalizeCard(await response.json());
   },
