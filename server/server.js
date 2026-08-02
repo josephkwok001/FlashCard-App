@@ -40,6 +40,7 @@ app.use((err, _req, res, _next) => {
   });
 });
 
+// catch all 404 errors
 app.use('*', (_req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
