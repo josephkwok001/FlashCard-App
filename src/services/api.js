@@ -23,6 +23,11 @@ function getAuthHeaders() {
   return headers;
 }
 
+async function readErrorMessage(response, fallback) {
+  const error = await response.json().catch(() => null);
+  return error?.message || fallback;
+}
+
 const api = {
   guestLogin: async () => {
     const response = await fetch(`${API_BASE_URL}/auth/guest`, {
@@ -35,10 +40,45 @@ const api = {
     return data;
   },
 
+  // Real auth: only succeed if a token already exists (from login/register).
+  // No more automatic guest login.
   ensureAuth: async () => {
     if (getToken()) return;
-    await api.guestLogin();
+    throw new Error('Please log in');
   },
+
+  register: async (email, password, name) => {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name })
+    });
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response, 'Failed to register'));
+    }
+    const data = await response.json();
+    if (data.token) setToken(data.token);
+    return data;
+  },
+
+  login: async (email, password) => {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response, 'Failed to log in'));
+    }
+    const data = await response.json();
+    if (data.token) setToken(data.token);
+    return data;
+  },
+
+  logout: () => {
+    removeToken();
+  },
+
 
   getCards: async () => {
     const response = await fetch(`${API_BASE_URL}/cards`, {
