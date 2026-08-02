@@ -3,7 +3,7 @@ import { useCards } from '../context/CardContext';
 import api from '../services/api.js';
 
 function AddCardForm() {
-  const { addCard } = useCards();
+    const { addCard } = useCards(); // addCard is the only variable you pull into scope.
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
     const [suggestion, setSuggestion] = useState('');
