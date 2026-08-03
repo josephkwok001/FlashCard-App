@@ -1,25 +1,105 @@
 # Flashcards
 
-A flashcard app with spaced repetition (Again / Hard / Good / Easy). Add cards, study by due date or study all.
+Full-stack spaced-repetition flashcard app: React frontend, Express API, MongoDB, and JWT auth.
 
-**Live demo:** [View on GitHub Pages](https://josephkwok001.github.io/my-project/)  
-*(Replace `my-project` with your repo name if different—e.g. `My-project`.)*
+**Live demo:** [GitHub Pages](https://josephkwok001.github.io/my-project/)  
+*(API must be running locally or deployed for login/cards to work against a backend.)*
 
 ---
 
-# React + Vite
+## Highlights (for interviewers)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- **JWT auth** — register / login, bcrypt password hashing, protected card routes
+- **Spaced repetition** — SuperMemo SM-2 style scheduling (Again / Hard / Good / Easy)
+- **Per-user decks** — cards scoped by `userId` from the token
+- **React context + REST** — optimistic UI updates synced to Express/MongoDB
+- **Optional AI assist** — OpenRouter suggestion for card backs
 
-Currently, two official plugins are available:
+```
+React (Vite)  →  Express API  →  MongoDB Atlas
+     JWT in localStorage · Authorization: Bearer
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Screenshots
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Add images under `docs/` (or a `screenshots/` folder) and link them here:
 
-## Expanding the ESLint configuration
+| Screen | File (suggested) |
+|--------|------------------|
+| Login | `docs/login.png` |
+| Study (flip + rate) | `docs/study.png` |
+| My Cards | `docs/cards.png` |
+| Stats | `docs/stats.png` |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```md
+![Login](docs/login.png)
+![Study](docs/study.png)
+![My Cards](docs/cards.png)
+![Stats](docs/stats.png)
+```
+
+---
+
+## Tech stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | React 19, React Router, Vite |
+| Backend | Node.js, Express |
+| Database | MongoDB + Mongoose |
+| Auth | JWT + bcryptjs |
+
+---
+
+## Run locally
+
+**Prerequisites:** Node 18+, MongoDB Atlas (or local MongoDB). Optional: OpenRouter API key for AI suggestions.
+
+1. Install and configure env:
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Set at least:
+
+```
+MONGODB_URI=...
+JWT_SECRET=...
+PORT=5001
+CLIENT_URL=http://localhost:5173
+```
+
+2. Start API and UI (two terminals):
+
+```bash
+npm run dev:server
+npm run dev
+```
+
+3. Open the Vite URL (often `http://localhost:5173/my-project/`), register, then study.
+
+More server detail: [SERVER_README.md](./SERVER_README.md)
+
+---
+
+## API (auth + cards)
+
+| Method | Path | Notes |
+|--------|------|--------|
+| POST | `/api/auth/register` | Create user + JWT |
+| POST | `/api/auth/login` | Email/password + JWT |
+| GET/POST/PUT/DELETE | `/api/cards`… | Require `Authorization: Bearer <token>` |
+| POST | `/api/cards/:id/rate` | Update SM-2 schedule |
+
+---
+
+## Project layout
+
+```
+src/           React UI (pages, context, api client)
+server/        Express routes, controllers, models, auth middleware
+```

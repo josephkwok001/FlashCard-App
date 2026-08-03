@@ -27,37 +27,49 @@ function LoginPage() {
   }
 
   return (
-    <form className="add-card-form auth-form" onSubmit={handleSubmit}>
-      <h3>Log in</h3>
+    <div className="auth-panel">
+      <div className="auth-panel-header">
+        <p className="auth-eyebrow">Flashcards</p>
+        <h2>Welcome back</h2>
+        <p className="auth-subtitle">Log in to study your deck and pick up where you left off.</p>
+      </div>
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-      />
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="auth-field">
+          <span>Email</span>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </label>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        autoComplete="current-password"
-      />
+        <label className="auth-field">
+          <span>Password</span>
+          <input
+            type="password"
+            placeholder="Your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+        </label>
 
-      {error && <p className="form-error">{error}</p>}
+        {error && <p className="form-error">{error}</p>}
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Logging in...' : 'Log in'}
-      </button>
+        <button type="submit" className="auth-submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Log in'}
+        </button>
+      </form>
 
       <p className="auth-switch">
         No account? <Link to="/register">Create one</Link>
       </p>
-    </form>
+    </div>
   );
 }
 

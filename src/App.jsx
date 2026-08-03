@@ -29,8 +29,8 @@ function AppShell() {
   }
 
   return (
-    <div className="app-container">
-      <h1>Flashcards</h1>
+    <div className={`app-container${isAuthPage ? ' app-container--auth' : ''}`}>
+      {!isAuthPage && <h1>Flashcards</h1>}
 
       {!isAuthPage && isLoggedIn && (
         <nav className="nav-bar">

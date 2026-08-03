@@ -28,46 +28,61 @@ function RegisterPage() {
   }
 
   return (
-    <form className="add-card-form auth-form" onSubmit={handleSubmit}>
-      <h3>Create account</h3>
+    <div className="auth-panel">
+      <div className="auth-panel-header">
+        <p className="auth-eyebrow">Flashcards</p>
+        <h2>Create your account</h2>
+        <p className="auth-subtitle">Save your deck with spaced repetition across devices.</p>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        autoComplete="name"
-      />
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="auth-field">
+          <span>Name</span>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
+          />
+        </label>
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-      />
+        <label className="auth-field">
+          <span>Email</span>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </label>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        minLength={6}
-        autoComplete="new-password"
-      />
+        <label className="auth-field">
+          <span>Password</span>
+          <input
+            type="password"
+            placeholder="At least 6 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </label>
 
-      {error && <p className="form-error">{error}</p>}
+        {error && <p className="form-error">{error}</p>}
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Creating account...' : 'Register'}
-      </button>
+        <button type="submit" className="auth-submit" disabled={loading}>
+          {loading ? 'Creating account...' : 'Create account'}
+        </button>
+      </form>
 
       <p className="auth-switch">
         Already have an account? <Link to="/login">Log in</Link>
       </p>
-    </form>
+    </div>
   );
 }
 

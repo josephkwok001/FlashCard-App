@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useCards } from '../context/CardContext';
 
 function StudyCard() {
@@ -114,6 +115,9 @@ function StudyCard() {
 
   const safeIndex = Math.min(index, Math.max(displayCards.length - 1, 0));
   const currentCard = displayCards[safeIndex];
+  const progress = displayCards.length
+    ? ((safeIndex + 1) / displayCards.length) * 100
+    : 0;
 
   function handleQuality(quality) {
     const cardId = currentCard?.id;
@@ -121,7 +125,7 @@ function StudyCard() {
     if (!studyAllMode) {
       updateCardReview(cardId, quality);
     }
-    setIndex(i => {
+    setIndex((i) => {
       if (displayCards.length === 0) return 0;
       const next = i + 1;
       return next >= displayCards.length ? 0 : next;
@@ -135,60 +139,99 @@ function StudyCard() {
 
   if (loading) {
     return (
-      <div className="study-card-container">
-        <p>Loading cards...</p>
+      <div className="study-card-container study-empty">
+        <p className="study-empty-title">Loading your cards…</p>
       </div>
     );
   }
 
   if (displayCards.length === 0) {
     return (
-      <div className="study-card-container">
-        <p>
-          {studyAllMode
-            ? 'No cards in deck. Add some cards to study.'
-            : "No cards due today. You're all caught up!"}
+      <div className="study-card-container study-empty">
+        <p className="study-empty-title">
+          {studyAllMode ? 'Your deck is empty' : "You're all caught up"}
         </p>
+        <p className="study-empty-copy">
+          {studyAllMode
+            ? 'Add a few cards, then come back to practice.'
+            : 'Nothing due today. Switch to Study all, or add new cards.'}
+        </p>
+        <Link className="study-empty-cta" to="/cards">
+          Go to My Cards
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="study-card-container">
-      <div className="card-flip-wrapper" onClick={flipCard}>
+      <div className="study-progress" aria-hidden="true">
+        <div className="study-progress-bar" style={{ width: `${progress}%` }} />
+      </div>
+
+      <div
+        className="card-flip-wrapper"
+        onClick={flipCard}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') flipCard();
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={isFlipped ? 'Show front of card' : 'Show back of card'}
+      >
         <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
           <div className="card-flip-front">
             <span className="card-flip-label">Front</span>
             <p>{currentCard.front}</p>
-            <span className="card-flip-hint">Click to flip</span>
+            <span className="card-flip-hint">Click or press Space to flip</span>
           </div>
           <div className="card-flip-back">
             <span className="card-flip-label">Back</span>
             <p>{currentCard.back}</p>
-            <span className="card-flip-hint">Click to flip</span>
+            <span className="card-flip-hint">Rate below to schedule the next review</span>
           </div>
         </div>
       </div>
+
       <p className="card-counter">
         Card {safeIndex + 1} of {displayCards.length}
-        {shuffledCards && ' (shuffled)'}
+        {shuffledCards ? ' · shuffled' : ''}
       </p>
+
       {!studyAllMode && (
-        <div className="quality-buttons">
-          <button type="button" className="quality-again" onClick={() => handleQuality(1)}>Again</button>
-          <button type="button" className="quality-hard" onClick={() => handleQuality(2)}>Hard</button>
-          <button type="button" className="quality-good" onClick={() => handleQuality(3)}>Good</button>
-          <button type="button" className="quality-easy" onClick={() => handleQuality(4)}>Easy</button>
+        <div className="quality-buttons" aria-label="How well did you remember?">
+          <button type="button" className="quality-again" onClick={() => handleQuality(1)}>
+            <span className="quality-key">1</span>
+            Again
+          </button>
+          <button type="button" className="quality-hard" onClick={() => handleQuality(2)}>
+            <span className="quality-key">2</span>
+            Hard
+          </button>
+          <button type="button" className="quality-good" onClick={() => handleQuality(3)}>
+            <span className="quality-key">3</span>
+            Good
+          </button>
+          <button type="button" className="quality-easy" onClick={() => handleQuality(4)}>
+            <span className="quality-key">4</span>
+            Easy
+          </button>
         </div>
       )}
+
       <div className="study-nav-buttons">
-        <button onClick={flipCard}>Flip</button>
-        <button onClick={prevCard}>Prev</button>
-        <button onClick={nextCard}>Next</button>
-        <button onClick={shuffledCards ? unshuffleCards : shuffleCards}>
+        <button type="button" onClick={flipCard}>Flip</button>
+        <button type="button" onClick={prevCard}>Prev</button>
+        <button type="button" onClick={nextCard}>Next</button>
+        <button type="button" onClick={shuffledCards ? unshuffleCards : shuffleCards}>
           {shuffledCards ? 'Unshuffle' : 'Shuffle'}
         </button>
       </div>
+
+      <p className="study-shortcuts">
+        Shortcuts: Space flip · ← → navigate
+        {!studyAllMode ? ' · 1–4 rate' : ''}
+      </p>
     </div>
   );
 }
