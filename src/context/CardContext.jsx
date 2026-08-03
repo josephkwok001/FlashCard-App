@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext, useMemo } from 'react';
-import api from '../services/api.js';
+import api, { getToken } from '../services/api.js';
 
 // Step 1: Create the context (the "bulletin board")
 const CardContext = createContext();
@@ -17,10 +17,17 @@ function CardProvider({ children }) {
   }, []);
 
   async function initCards() {
+    // No token yet → stay logged out; LoginPage will load cards after login
+    if (!getToken()) {
+      setCards([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      await api.ensureAuth();
       const data = await api.getCards();
       setCards(data);
     } catch (err) {
@@ -33,6 +40,13 @@ function CardProvider({ children }) {
   }
 
   async function loadCards() {
+    if (!getToken()) {
+      setCards([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -44,6 +58,11 @@ function CardProvider({ children }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function clearCards() {
+    setCards([]);
+    setError(null);
   }
 
   // Helper to update cards locally (optimistic updates)
@@ -177,7 +196,8 @@ function CardProvider({ children }) {
       updateCardReview,
       loading,
       error,
-      reloadCards: loadCards
+      reloadCards: loadCards,
+      clearCards
     }}>
       {children}
     </CardContext.Provider>
