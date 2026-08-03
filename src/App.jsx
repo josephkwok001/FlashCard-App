@@ -4,6 +4,8 @@ import StudyPage from './pages/StudyPage';
 import CardsPage from './pages/CardsPage';
 import StatsPage from './pages/StatsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 function AppShell() {
   const { loading, error, reloadCards } = useCards();
@@ -30,6 +32,9 @@ function AppShell() {
       )}
 
       <Routes>
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/" element={<StudyPage />} />
         <Route path="/cards" element={<CardsPage />} />
         <Route path="/stats" element={<StatsPage />} />
