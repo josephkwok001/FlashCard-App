@@ -5,9 +5,11 @@ Full-stack spaced-repetition flashcard app: React frontend, Express API, MongoDB
 **Live demo:** [GitHub Pages](https://josephkwok001.github.io/my-project/)  
 *(API must be running locally or deployed for login/cards to work against a backend.)*
 
+![Study session — flip card with spaced-repetition ratings](docs/thumbnail.png)
+
 ---
 
-## Highlights (for interviewers)
+## Highlights
 
 - **JWT auth** — register / login, bcrypt password hashing, protected card routes
 - **Spaced repetition** — SuperMemo SM-2 style scheduling (Again / Hard / Good / Easy)
@@ -24,21 +26,18 @@ React (Vite)  →  Express API  →  MongoDB Atlas
 
 ## Screenshots
 
-Add images under `docs/` (or a `screenshots/` folder) and link them here:
-
-| Screen | File (suggested) |
-|--------|------------------|
-| Login | `docs/login.png` |
-| Study (flip + rate) | `docs/study.png` |
-| My Cards | `docs/cards.png` |
-| Stats | `docs/stats.png` |
-
-```md
 ![Login](docs/login.png)
-![Study](docs/study.png)
-![My Cards](docs/cards.png)
-![Stats](docs/stats.png)
-```
+![Register](docs/register.png)
+![Study](docs/studyview.png)
+
+| Screen | File |
+|--------|------|
+| Hero / thumbnail | `docs/thumbnail.png` |
+| Login | `docs/login.png` |
+| Register | `docs/register.png` |
+| Study | `docs/studyview.png` |
+
+Still optional: `docs/cards.png`, `docs/stats.png` for My Cards and Stats.
 
 ---
 
