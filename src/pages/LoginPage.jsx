@@ -29,9 +29,9 @@ function LoginPage() {
   return (
     <div className="auth-panel">
       <div className="auth-panel-header">
-        <p className="auth-eyebrow">Flashcards</p>
+        <p className="auth-eyebrow">Quiet study</p>
         <h2>Welcome back</h2>
-        <p className="auth-subtitle">Log in to study your deck and pick up where you left off.</p>
+        <p className="auth-subtitle">Sit down at your desk and pick up where you left off.</p>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>

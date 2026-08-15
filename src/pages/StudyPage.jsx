@@ -2,17 +2,19 @@ import StudyCard from '../components/StudyCard';
 import { useCards } from '../context/CardContext';
 
 function StudyPage() {
-  const { studyAllMode, setStudyAllMode, cards } = useCards();
-  const dueCount = cards.filter((card) => new Date(card.nextReview) <= new Date()).length;
+  const { studyAllMode, setStudyAllMode, cards, cardsToStudy } = useCards();
+  const dueCount = studyAllMode
+    ? cards.filter((card) => new Date(card.nextReview).getTime() <= Date.now()).length
+    : cardsToStudy.length;
 
   return (
     <div className="study-page">
       <header className="study-page-header">
-        <h2>Study</h2>
+        <h2>Today’s session</h2>
         <p>
           {studyAllMode
-            ? `${cards.length} card${cards.length === 1 ? '' : 's'} in your deck`
-            : `${dueCount} due today`}
+            ? `Study all · ${cards.length} card${cards.length === 1 ? '' : 's'}`
+            : `Due today · ${dueCount} card${dueCount === 1 ? '' : 's'}`}
         </p>
       </header>
 

@@ -12,6 +12,7 @@ function CardProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [studyAllMode, setStudyAllMode] = useState(false);
+  const [clock, setClock] = useState(() => Date.now());
 
   useEffect(() => {
     initCards();
@@ -156,9 +157,23 @@ function CardProvider({ children }) {
       });
   }
 
+  useEffect(() => {
+    const soonest = cards.reduce((earliest, card) => {
+      const t = new Date(card.nextReview).getTime();
+      if (t > clock && (earliest == null || t < earliest)) return t;
+      return earliest;
+    }, null);
+
+    if (soonest == null) return undefined;
+
+    const delay = Math.max(soonest - Date.now(), 0);
+    const id = setTimeout(() => setClock(Date.now()), delay);
+    return () => clearTimeout(id);
+  }, [cards, clock]);
+
   const dueCards = useMemo(() => {
-    return cards.filter(card => new Date(card.nextReview) <= new Date());
-  }, [cards]);
+    return cards.filter((card) => new Date(card.nextReview).getTime() <= clock);
+  }, [cards, clock]);
 
   const cardsToStudy = studyAllMode ? cards : dueCards;
 

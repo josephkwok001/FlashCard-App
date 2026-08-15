@@ -1,24 +1,23 @@
-# Flashcards
+# Desk
 
-Full-stack spaced-repetition flashcard app: React frontend, Express API, MongoDB, and JWT auth.
+Spaced-repetition flashcards: React + Express + MongoDB, JWT auth, and SuperMemo **SM-2** shared by the API and the UI.
 
 **Live demo:** [GitHub Pages](https://josephkwok001.github.io/my-project/)  
-*(API must be running locally or deployed for login/cards to work against a backend.)*
+The Pages build is the UI only — register/study need the API (local or deployed) pointed at MongoDB.
 
-![Study session — flip card with spaced-repetition ratings](docs/thumbnail.png)
+![Study — flipped card with SM-2 rating delays](docs/thumbnail.png)
 
 ---
 
 ## Highlights
 
-- **JWT auth** — register / login, bcrypt password hashing, protected card routes
-- **Spaced repetition** — SuperMemo SM-2 style scheduling (Again / Hard / Good / Easy)
-- **Per-user decks** — cards scoped by `userId` from the token
-- **React context + REST** — optimistic UI updates synced to Express/MongoDB
-- **Optional AI assist** — OpenRouter suggestion for card backs
-- **Typed answers** — Levenshtein distance maps typos to Again / Hard / Good / Easy
-- **Inverted-index search** — word search on front and back (AND of terms)
-- **Review history** — append-only log feeding last-7-days Stats
+- **JWT auth** — register / login, bcrypt (cost 10), cards scoped by `userId` on the token
+- **SM-2 scheduling** — Again / Hard / Good / Easy; same `shared/sm2.js` on the server and in the optimistic UI
+- **No skipping** — flip the card, then rate; Again requeues in **1 minute**
+- **Typed answers** — Levenshtein distance maps typos to SM-2 quality 1–4
+- **Inverted-index search** — tokenized front + back, AND of query terms
+- **Review history** — append-only `reviews` feeding last-7-days Stats
+- **Optional AI assist** — OpenRouter suggestion for a card back
 
 ```
 React (Vite)  →  Express API  →  MongoDB
@@ -30,18 +29,17 @@ React (Vite)  →  Express API  →  MongoDB
 
 ## Screenshots
 
+Replace the files in `docs/` with the shots listed at the bottom of this README (same names). Current images may still show the old purple UI.
+
 ![Login](docs/login.png)
+
 ![Register](docs/register.png)
-![Study](docs/studyview.png)
 
-| Screen | File |
-|--------|------|
-| Hero / thumbnail | `docs/thumbnail.png` |
-| Login | `docs/login.png` |
-| Register | `docs/register.png` |
-| Study | `docs/studyview.png` |
+![Study (front — Flip)](docs/studyview.png)
 
-Still optional: `docs/cards.png`, `docs/stats.png` for My Cards and Stats.
+![My Cards — add, search, edit](docs/cards.png)
+
+![Stats — due counts and 7-day history](docs/stats.png)
 
 ---
 
@@ -49,7 +47,7 @@ Still optional: `docs/cards.png`, `docs/stats.png` for My Cards and Stats.
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 19, React Router, Vite |
+| Frontend | React 19, React Router, Vite (`basename /my-project`) |
 | Backend | Node.js, Express |
 | Database | MongoDB + Mongoose |
 | Auth | JWT + bcryptjs |
@@ -58,7 +56,7 @@ Still optional: `docs/cards.png`, `docs/stats.png` for My Cards and Stats.
 
 ## Run locally
 
-**Prerequisites:** Node 18+, MongoDB Atlas (or local MongoDB). Optional: OpenRouter API key for AI suggestions.
+**Prerequisites:** Node 18+. MongoDB Atlas **or** local MongoDB. Optional: OpenRouter key for AI Suggest.
 
 1. Install and configure env:
 
@@ -70,20 +68,29 @@ cp .env.example .env
 Set at least:
 
 ```
-MONGODB_URI=...
+MONGODB_URI=mongodb://127.0.0.1:27017/flashcards
 JWT_SECRET=...
 PORT=5001
 CLIENT_URL=http://localhost:5173
+VITE_API_URL=http://localhost:5001/api
 ```
 
-2. Start API and UI (two terminals):
+For Atlas, use the `mongodb+srv://…` URI instead.
+
+2. If you are using the bundled local Mongo:
+
+```bash
+./scripts/start-mongo.sh
+```
+
+3. API and UI (two terminals):
 
 ```bash
 npm run dev:server
 npm run dev
 ```
 
-3. Open the Vite URL (often `http://localhost:5173/my-project/`), register, then study.
+4. Open `http://localhost:5173/my-project/`, register, add a few cards, then study.
 
 ```bash
 npm test
@@ -97,10 +104,10 @@ More server detail: [SERVER_README.md](./SERVER_README.md)
 
 | Piece | Where | What it does |
 |-------|--------|----------------|
-| **SM-2 scheduler** | `shared/sm2.js` | Maps quality 1–4 → next `interval` / `easeFactor` / `nextReview`. Used by the API and optimistic UI. |
+| **SM-2** | `shared/sm2.js` | Passing grades: **1 day → 6 days → interval × ease**. Easy raises ease (later waits grow faster); Hard lowers it. **Again** resets the streak and sets `nextReview` to **+1 minute**. Quality buttons preview these delays. Used by `POST /api/cards/:id/rate` and the optimistic UI. |
 | **Levenshtein grading** | `shared/levenshtein.js` | Edit distance between typed answer and card back → SM-2 quality. Exact = Easy; relative distance ≤ 0.2 = Good; ≤ 0.4 = Hard; else Again. |
 | **Inverted index** | `shared/invertedIndex.js` | Tokenize front+back; query is AND of posting lists. |
-| **Review log** | `reviews` collection | Each rating appends `{ userId, cardId, quality, createdAt }`. Stats aggregates last 7 days. |
+| **Review log** | `reviews` collection | Each rating appends `{ userId, cardId, quality, createdAt }`. Stats aggregates the last 7 days. |
 
 `npm test` runs `shared/*.test.js` (Node built-in test runner).
 
@@ -124,4 +131,23 @@ More server detail: [SERVER_README.md](./SERVER_README.md)
 src/           React UI (pages, context, api client)
 server/        Express routes, controllers, models, auth middleware
 shared/        SM-2, Levenshtein, inverted index (used by UI + API)
+docs/          README screenshots
+scripts/       start-mongo.sh (optional local mongod)
 ```
+
+---
+
+## Screenshot checklist
+
+Save into `docs/` at **2×** (Retina) if you can. Window ~1280px wide, cream Desk theme visible, no bookmarks bar, no real email.
+
+| File | Screen | What to show |
+|------|--------|----------------|
+| `docs/thumbnail.png` | Study, **after Flip** | Back of a card. Again / Hard / Good / Easy with SM-2 labels (**1 min**, **1 day**, **1 day**, **1 day** on a new card). **No** Prev / Next / Shuffle. Log out in the **top right**, tabs only Study / My Cards / Stats. This is the README hero. |
+| `docs/login.png` | Log in | “Quiet study” / Welcome back. **Log in** control in the top-right header. Dummy email like `you@example.com`. |
+| `docs/register.png` | Register | “Create your desk”. Same header; Register highlighted or Log in link in the top right. |
+| `docs/studyview.png` | Study, **before Flip** | Front of the card, **Flip** only, “Due today · N cards”, Rate selected. Ratings hidden until flip. |
+| `docs/cards.png` | My Cards | Add New Card (Front / Back / AI Suggest) **and** the list with **Word search** filled in (e.g. `queue`) so inverted-index AND is obvious. 3+ CS-themed cards. |
+| `docs/stats.png` | Stats | Total / Due / New / Mastered plus **Last 7 days** bars and Again–Easy split. Rate a few cards first so the bars are not empty. |
+
+**How:** log in at `http://localhost:5173/my-project/` → macOS **⌘⇧4**, then **space**, click the browser window. Overwrite the files above (Git will show them as modified).

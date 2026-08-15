@@ -48,7 +48,7 @@ function CardList() {
     return (
       <div className="card-list-container">
         <h2>My Flashcards</h2>
-        <p>Loading cards...</p>
+        <p>Preparing your desk…</p>
       </div>
     );
   }

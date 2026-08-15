@@ -35,7 +35,7 @@ function Statistics() {
     return (
       <div className="stats-container">
         <h2>Statistics</h2>
-        <p>Loading statistics...</p>
+        <p>Preparing your desk…</p>
       </div>
     );
   }
@@ -93,10 +93,10 @@ function Statistics() {
 
           <div className="stats-quality-split" aria-label="Rating split">
             {[
-              ['Again', history.qualityCounts[1], '#ef4444'],
-              ['Hard', history.qualityCounts[2], '#f59e0b'],
-              ['Good', history.qualityCounts[3], '#22c55e'],
-              ['Easy', history.qualityCounts[4], '#10b981']
+              ['Again', history.qualityCounts[1], '#b85c4a'],
+              ['Hard', history.qualityCounts[2], '#c4922a'],
+              ['Good', history.qualityCounts[3], '#3d7a52'],
+              ['Easy', history.qualityCounts[4], '#2a6b5a']
             ].map(([label, count, color]) => (
               <div key={label} className="stats-quality-row">
                 <span>{label}</span>

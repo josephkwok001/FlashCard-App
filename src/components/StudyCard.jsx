@@ -1,27 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCards } from '../context/CardContext';
 import { gradeAnswer } from '../../shared/levenshtein.js';
+import { scheduleReview, formatReviewDelay } from '../../shared/sm2.js';
 
 function StudyCard() {
   const { cardsToStudy: cards, updateCardReview, studyAllMode, loading } = useCards();
 
-  const [index, setIndex] = useState(0);
+  const [currentId, setCurrentId] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [shuffledCards, setShuffledCards] = useState(null);
   const [answerMode, setAnswerMode] = useState('rate');
   const [typed, setTyped] = useState('');
   const [grade, setGrade] = useState(null);
+  const [ratedIds, setRatedIds] = useState(() => new Set());
 
-  const displayCards = shuffledCards || cards;
+  const displayCards = useMemo(() => {
+    if (!studyAllMode) return cards;
+    return cards.filter((card) => !ratedIds.has(card.id));
+  }, [cards, ratedIds, studyAllMode]);
 
   useEffect(() => {
-    setShuffledCards(null);
-    setIndex(0);
     setIsFlipped(false);
     setTyped('');
     setGrade(null);
-  }, [cards]);
+    setRatedIds(new Set());
+  }, [studyAllMode]);
+
+  useEffect(() => {
+    if (displayCards.length === 0) {
+      setCurrentId(null);
+      return;
+    }
+    if (!displayCards.some((card) => card.id === currentId)) {
+      setCurrentId(displayCards[0].id);
+    }
+  }, [displayCards, currentId]);
 
   const handlersRef = useRef({});
 
@@ -39,29 +52,14 @@ function StudyCard() {
           event.preventDefault();
           h.flipCard();
           break;
-        case 'ArrowLeft':
-          event.preventDefault();
-          h.prevCard();
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          h.nextCard();
-          break;
         case '1':
-          event.preventDefault();
-          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(1);
-          break;
         case '2':
-          event.preventDefault();
-          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(2);
-          break;
         case '3':
-          event.preventDefault();
-          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(3);
-          break;
         case '4':
           event.preventDefault();
-          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(4);
+          if (h.answerMode === 'rate' && h.isFlipped) {
+            h.handleQuality(Number(event.key));
+          }
           break;
         default:
           break;
@@ -82,67 +80,48 @@ function StudyCard() {
 
   function flipCard() {
     if (answerMode === 'type' && !studyAllMode) return;
-    setIsFlipped(!isFlipped);
+    if (isFlipped) return;
+    setIsFlipped(true);
   }
 
-  function nextCard() {
-    const nextId = index + 1;
-
-    if (nextId >= displayCards.length) {
-      setIndex(0);
-    } else {
-      setIndex(nextId);
-    }
-
-    resetPrompt();
-  }
-
-  function prevCard() {
-    const nextId = index - 1;
-
-    if (nextId < 0) {
-      setIndex(displayCards.length - 1);
-    } else {
-      setIndex(nextId);
-    }
-
-    resetPrompt();
-  }
-
-  function shuffleCards() {
-    const copy = [...cards];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    setShuffledCards(copy);
-    setIndex(0);
-    resetPrompt();
-  }
-
-  function unshuffleCards() {
-    setShuffledCards(null);
-    setIndex(0);
-    resetPrompt();
-  }
-
-  const safeIndex = Math.min(index, Math.max(displayCards.length - 1, 0));
-  const currentCard = displayCards[safeIndex];
+  const safeIndex = Math.max(0, displayCards.findIndex((card) => card.id === currentId));
+  const currentCard = displayCards.find((card) => card.id === currentId) ?? displayCards[0];
   const progress = displayCards.length
     ? ((safeIndex + 1) / displayCards.length) * 100
     : 0;
 
+  const returnPreview = useMemo(() => {
+    if (!currentCard) return null;
+    const state = {
+      easeFactor: currentCard.easeFactor,
+      interval: currentCard.interval,
+      repetitions: currentCard.repetitions
+    };
+    return {
+      1: formatReviewDelay(scheduleReview(state, 1).nextReview),
+      2: formatReviewDelay(scheduleReview(state, 2).nextReview),
+      3: formatReviewDelay(scheduleReview(state, 3).nextReview),
+      4: formatReviewDelay(scheduleReview(state, 4).nextReview)
+    };
+  }, [currentCard]);
+
   function handleQuality(quality) {
     const cardId = currentCard?.id;
     if (cardId == null) return;
-    if (!studyAllMode) {
-      updateCardReview(cardId, quality);
+    if (answerMode === 'rate' && !isFlipped) return;
+
+    const i = Math.max(0, displayCards.findIndex((card) => card.id === cardId));
+    const next = displayCards[i + 1];
+
+    updateCardReview(cardId, quality);
+    if (studyAllMode) {
+      setRatedIds((prev) => {
+        const nextSet = new Set(prev);
+        nextSet.add(cardId);
+        return nextSet;
+      });
     }
-    setIndex((i) => {
-      if (displayCards.length === 0) return 0;
-      const next = i + 1;
-      return next >= displayCards.length ? 0 : next;
-    });
+    setCurrentId(next?.id ?? null);
     resetPrompt();
   }
 
@@ -160,13 +139,13 @@ function StudyCard() {
   }
 
   useEffect(() => {
-    handlersRef.current = { flipCard, prevCard, nextCard, handleQuality, studyAllMode, answerMode };
+    handlersRef.current = { flipCard, handleQuality, studyAllMode, answerMode, isFlipped };
   });
 
   if (loading) {
     return (
       <div className="study-card-container study-empty">
-        <p className="study-empty-title">Loading your cards…</p>
+        <p className="study-empty-title">Preparing your desk…</p>
       </div>
     );
   }
@@ -180,7 +159,7 @@ function StudyCard() {
         <p className="study-empty-copy">
           {studyAllMode
             ? 'Add a few cards, then come back to practice.'
-            : 'Nothing due today. Switch to Study all, or add new cards.'}
+            : 'Nothing due right now. Failed cards return in a minute, or switch to Study all.'}
         </p>
         <Link className="study-empty-cta" to="/cards">
           Go to My Cards
@@ -191,6 +170,7 @@ function StudyCard() {
 
   const typeMode = !studyAllMode && answerMode === 'type';
   const showBack = isFlipped || Boolean(grade);
+  const canRate = answerMode === 'rate' && isFlipped && returnPreview;
 
   return (
     <div className="study-card-container">
@@ -203,7 +183,7 @@ function StudyCard() {
           <button
             type="button"
             className={answerMode === 'rate' ? 'active' : ''}
-            onClick={() => { setAnswerMode('rate'); setGrade(null); setTyped(''); }}
+            onClick={() => { setAnswerMode('rate'); setIsFlipped(false); setGrade(null); setTyped(''); }}
           >
             Rate
           </button>
@@ -225,21 +205,21 @@ function StudyCard() {
         }}
         role="button"
         tabIndex={typeMode ? -1 : 0}
-        aria-label={showBack ? 'Show front of card' : 'Show back of card'}
+        aria-label={showBack ? 'Card back' : 'Show back of card'}
       >
         <div className={`card-flip-inner ${showBack ? 'flipped' : ''}`}>
           <div className="card-flip-front">
             <span className="card-flip-label">Front</span>
             <p>{currentCard.front}</p>
             <span className="card-flip-hint">
-              {typeMode ? 'Type the back below' : 'Click or press Space to flip'}
+              {typeMode ? 'Type the back below' : 'Flip to reveal the back, then rate'}
             </span>
           </div>
           <div className="card-flip-back">
             <span className="card-flip-label">Back</span>
             <p>{currentCard.back}</p>
             <span className="card-flip-hint">
-              {typeMode ? 'Compared with what you typed' : 'Rate below to schedule the next review'}
+              {typeMode ? 'Compared with what you typed' : 'How well did you remember it?'}
             </span>
           </div>
         </div>
@@ -247,26 +227,35 @@ function StudyCard() {
 
       <p className="card-counter">
         Card {safeIndex + 1} of {displayCards.length}
-        {shuffledCards ? ' · shuffled' : ''}
       </p>
 
-      {!studyAllMode && answerMode === 'rate' && (
+      {!isFlipped && !typeMode && (
+        <div className="study-nav-buttons">
+          <button type="button" onClick={flipCard}>Flip</button>
+        </div>
+      )}
+
+      {canRate && (
         <div className="quality-buttons" aria-label="How well did you remember?">
           <button type="button" className="quality-again" onClick={() => handleQuality(1)}>
             <span className="quality-key">1</span>
             Again
+            <span className="quality-when">{returnPreview[1]}</span>
           </button>
           <button type="button" className="quality-hard" onClick={() => handleQuality(2)}>
             <span className="quality-key">2</span>
             Hard
+            <span className="quality-when">{returnPreview[2]}</span>
           </button>
           <button type="button" className="quality-good" onClick={() => handleQuality(3)}>
             <span className="quality-key">3</span>
             Good
+            <span className="quality-when">{returnPreview[3]}</span>
           </button>
           <button type="button" className="quality-easy" onClick={() => handleQuality(4)}>
             <span className="quality-key">4</span>
             Easy
+            <span className="quality-when">{returnPreview[4]}</span>
           </button>
         </div>
       )}
@@ -295,19 +284,10 @@ function StudyCard() {
         </div>
       )}
 
-      <div className="study-nav-buttons">
-        {!typeMode && <button type="button" onClick={flipCard}>Flip</button>}
-        <button type="button" onClick={prevCard}>Prev</button>
-        <button type="button" onClick={nextCard}>Next</button>
-        <button type="button" onClick={shuffledCards ? unshuffleCards : shuffleCards}>
-          {shuffledCards ? 'Unshuffle' : 'Shuffle'}
-        </button>
-      </div>
-
       <p className="study-shortcuts">
         {typeMode
-          ? 'Type mode: Enter checks (when the field is focused) · ← → navigate'
-          : `Shortcuts: Space flip · ← → navigate${!studyAllMode ? ' · 1–4 rate' : ''}`}
+          ? 'Type mode: Enter checks (when the field is focused)'
+            : 'Shortcuts: Space or Flip, then 1–4 to rate'}
       </p>
     </div>
   );

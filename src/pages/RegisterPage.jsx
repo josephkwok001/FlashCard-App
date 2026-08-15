@@ -30,9 +30,9 @@ function RegisterPage() {
   return (
     <div className="auth-panel">
       <div className="auth-panel-header">
-        <p className="auth-eyebrow">Flashcards</p>
-        <h2>Create your account</h2>
-        <p className="auth-subtitle">Save your deck with spaced repetition across devices.</p>
+        <p className="auth-eyebrow">Quiet study</p>
+        <h2>Create your desk</h2>
+        <p className="auth-subtitle">A private deck with spaced repetition — yours alone.</p>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>
