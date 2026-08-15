@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext, useMemo } from 'react';
 import api, { getToken } from '../services/api.js';
+import { scheduleReview } from '../../shared/sm2.js';
 
 // Step 1: Create the context (the "bulletin board")
 const CardContext = createContext();
@@ -128,43 +129,22 @@ function CardProvider({ children }) {
   }
 
   async function updateCardReview(cardId, quality) {
-    // Optimistic update
     updateCardsLocally(prevCards => prevCards.map(card => {
       if (card.id !== cardId) return card;
 
-      let { easeFactor, interval, repetitions } = card;
-
-      easeFactor = easeFactor + (0.1 - (3 - quality) * (0.08 + (3 - quality) * 0.02));
-      if (easeFactor < 1.3) {
-        easeFactor = 1.3;
-      }
-
-      if (quality < 2) {
-        repetitions = 0;
-        interval = 1;
-      } else {
-        repetitions = repetitions + 1;
-
-        if (repetitions === 1) {
-          interval = 1;
-        } else if (repetitions === 2) {
-          interval = 6;
-        } else {
-          interval = Math.round(interval * easeFactor);
-        }
-      }
-
-      const nextReview = new Date();
-      if (quality >= 2) {
-        nextReview.setDate(nextReview.getDate() + interval);
-      }
+      const schedule = scheduleReview(
+        {
+          easeFactor: card.easeFactor,
+          interval: card.interval,
+          repetitions: card.repetitions
+        },
+        quality
+      );
 
       return {
         ...card,
-        easeFactor,
-        interval,
-        repetitions,
-        nextReview: nextReview.toISOString()
+        ...schedule,
+        nextReview: schedule.nextReview.toISOString()
       };
     }));
 

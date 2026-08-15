@@ -16,10 +16,14 @@ Full-stack spaced-repetition flashcard app: React frontend, Express API, MongoDB
 - **Per-user decks** — cards scoped by `userId` from the token
 - **React context + REST** — optimistic UI updates synced to Express/MongoDB
 - **Optional AI assist** — OpenRouter suggestion for card backs
+- **Typed answers** — Levenshtein distance maps typos to Again / Hard / Good / Easy
+- **Inverted-index search** — word search on front and back (AND of terms)
+- **Review history** — append-only log feeding last-7-days Stats
 
 ```
-React (Vite)  →  Express API  →  MongoDB Atlas
+React (Vite)  →  Express API  →  MongoDB
      JWT in localStorage · Authorization: Bearer
+     shared/ SM-2, Levenshtein, inverted index
 ```
 
 ---
@@ -81,7 +85,24 @@ npm run dev
 
 3. Open the Vite URL (often `http://localhost:5173/my-project/`), register, then study.
 
+```bash
+npm test
+```
+
 More server detail: [SERVER_README.md](./SERVER_README.md)
+
+---
+
+## Algorithms
+
+| Piece | Where | What it does |
+|-------|--------|----------------|
+| **SM-2 scheduler** | `shared/sm2.js` | Maps quality 1–4 → next `interval` / `easeFactor` / `nextReview`. Used by the API and optimistic UI. |
+| **Levenshtein grading** | `shared/levenshtein.js` | Edit distance between typed answer and card back → SM-2 quality. Exact = Easy; relative distance ≤ 0.2 = Good; ≤ 0.4 = Hard; else Again. |
+| **Inverted index** | `shared/invertedIndex.js` | Tokenize front+back; query is AND of posting lists. |
+| **Review log** | `reviews` collection | Each rating appends `{ userId, cardId, quality, createdAt }`. Stats aggregates last 7 days. |
+
+`npm test` runs `shared/*.test.js` (Node built-in test runner).
 
 ---
 
@@ -92,7 +113,8 @@ More server detail: [SERVER_README.md](./SERVER_README.md)
 | POST | `/api/auth/register` | Create user + JWT |
 | POST | `/api/auth/login` | Email/password + JWT |
 | GET/POST/PUT/DELETE | `/api/cards`… | Require `Authorization: Bearer <token>` |
-| POST | `/api/cards/:id/rate` | Update SM-2 schedule |
+| POST | `/api/cards/:id/rate` | Update SM-2 schedule + append review |
+| GET | `/api/reviews/stats?days=7` | Per-day counts and quality split |
 
 ---
 
@@ -101,4 +123,5 @@ More server detail: [SERVER_README.md](./SERVER_README.md)
 ```
 src/           React UI (pages, context, api client)
 server/        Express routes, controllers, models, auth middleware
+shared/        SM-2, Levenshtein, inverted index (used by UI + API)
 ```

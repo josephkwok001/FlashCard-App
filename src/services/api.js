@@ -138,6 +138,14 @@ const api = {
     return normalizeCard(await response.json());
   },
 
+  getReviewStats: async (days = 7) => {
+    const response = await fetch(`${API_BASE_URL}/reviews/stats?days=${days}`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch review stats');
+    return response.json();
+  },
+
   getSuggestion: async (front) => {
     const response = await fetch(`${API_BASE_URL}/ai/suggest`, {
       method: 'POST',

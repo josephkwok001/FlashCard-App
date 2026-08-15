@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "nodemon server/server.js",
+    "test": "node --test shared/*.test.js",
     "test:db": "node scripts/test-db.js",
     "build": "vite build",
     "lint": "eslint .",

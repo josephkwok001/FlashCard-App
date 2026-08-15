@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import cardRoutes from './routes/cards.js';
 import aiRoutes from './routes/ai.js';
 import authRoutes from './routes/auth.js';
+import reviewRoutes from './routes/reviews.js';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.get('/', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cards', cardRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/ai', aiRoutes);
 
 // error handling

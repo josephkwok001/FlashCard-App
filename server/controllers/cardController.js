@@ -1,57 +1,6 @@
 import Card from '../models/Card.js';
-
-/**
- * Calculate new spaced repetition values based on quality rating
- * Algorithm adapted from SuperMemo SM-2
- *
- * @param {number} quality - Rating 1-4 (Again, Hard, Good, Easy)
- * @param {number} currentEaseFactor - Current ease factor
- * @param {number} currentInterval - Current interval in days
- * @param {number} currentRepetitions - Current repetition count
- * @returns {Object} - { easeFactor, interval, repetitions, nextReview }
- */
-const calculateReviewSchedule = (quality, currentEaseFactor, currentInterval, currentRepetitions) => {
-  let easeFactor = currentEaseFactor;
-  let interval = currentInterval;
-  let repetitions = currentRepetitions;
-
-  // Update ease factor
-  easeFactor = easeFactor + (0.1 - (3 - quality) * (0.08 + (3 - quality) * 0.02));
-  if (easeFactor < 1.3) {
-    easeFactor = 1.3;
-  }
-
-  // Update interval and repetitions based on quality
-  if (quality < 2) {
-    // Failed - reset
-    repetitions = 0;
-    interval = 1;
-  } else {
-    // Passed
-    repetitions = repetitions + 1;
-
-    if (repetitions === 1) {
-      interval = 1;
-    } else if (repetitions === 2) {
-      interval = 6;
-    } else {
-      interval = Math.round(interval * easeFactor);
-    }
-  }
-
-  // Calculate next review date
-  const nextReview = new Date();
-  if (quality >= 2) {
-    nextReview.setDate(nextReview.getDate() + interval);
-  }
-
-  return {
-    easeFactor,
-    interval,
-    repetitions,
-    nextReview
-  };
-};
+import Review from '../models/Review.js';
+import { scheduleReview } from '../../shared/sm2.js';
 
 // @desc    Get all cards for a user
 // @route   GET /api/cards
@@ -153,9 +102,9 @@ export const deleteCard = async (req, res) => {
 // @route   POST /api/cards/:id/rate
 export const rateCard = async (req, res) => {
   try {
-    const { quality } = req.body;
+    const quality = Number(req.body.quality);
 
-    if (quality < 1 || quality > 4) {
+    if (!Number.isInteger(quality) || quality < 1 || quality > 4) {
       return res.status(400).json({ message: 'Quality must be between 1 and 4' });
     }
 
@@ -165,11 +114,13 @@ export const rateCard = async (req, res) => {
       return res.status(404).json({ message: 'Card not found' });
     }
 
-    const schedule = calculateReviewSchedule(
-      quality,
-      card.easeFactor,
-      card.interval,
-      card.repetitions
+    const schedule = scheduleReview(
+      {
+        easeFactor: card.easeFactor,
+        interval: card.interval,
+        repetitions: card.repetitions
+      },
+      quality
     );
 
     card.easeFactor = schedule.easeFactor;
@@ -179,6 +130,11 @@ export const rateCard = async (req, res) => {
     card.updatedAt = new Date();
 
     await card.save();
+    await Review.create({
+      userId: req.user.id,
+      cardId: card._id,
+      quality
+    });
     res.json(card);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

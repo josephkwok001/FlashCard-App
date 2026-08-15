@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useCards } from '../context/CardContext';
+import { buildIndex, search } from '../../shared/invertedIndex.js';
 
 function CardList() {
   const { cards, deleteCard, editCard, loading } = useCards();
@@ -37,15 +38,11 @@ function CardList() {
     setEditingId(null);
   }
 
-  function filterCards(frontName) {
-    const trimmed = frontName.trim().toLowerCase();
-    if (trimmed === '') {
-      return cards;
-    }
-    return cards.filter((card) =>
-      card.front.toLowerCase().includes(trimmed)
-    );
-  }
+  const index = useMemo(() => buildIndex(cards), [cards]);
+  const visibleCards = useMemo(
+    () => search(index, filterText, cards),
+    [index, filterText, cards]
+  );
 
   if (loading) {
     return (
@@ -56,22 +53,23 @@ function CardList() {
     );
   }
 
-  const visibleCards = filterCards(filterText);
-
   return (
     <div className="card-list-container">
       <h2>My Flashcards <span>({cards.length})</span></h2>
 
       <div className="card-list-filter-row">
-        <label className="card-list-filter-label" htmlFor="card-front-filter">Filter card by front</label>
+        <label className="card-list-filter-label" htmlFor="card-front-filter">Word search</label>
         <input
           className="card-list-filter-input"
           id="card-front-filter"
           type="text"
           value={filterText}
-          placeholder="Type to filter…"
+          placeholder="Search front and back (e.g. glucose)"
           onChange={(e) => setFilterText(e.target.value)}
         />
+        <p className="card-list-filter-hint">
+          Inverted index over front and back. Multiple words use AND.
+        </p>
       </div>
 
       <ul>

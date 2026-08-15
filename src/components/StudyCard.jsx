@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCards } from '../context/CardContext';
+import { gradeAnswer } from '../../shared/levenshtein.js';
 
 function StudyCard() {
   const { cardsToStudy: cards, updateCardReview, studyAllMode, loading } = useCards();
@@ -8,6 +9,9 @@ function StudyCard() {
   const [index, setIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [shuffledCards, setShuffledCards] = useState(null);
+  const [answerMode, setAnswerMode] = useState('rate');
+  const [typed, setTyped] = useState('');
+  const [grade, setGrade] = useState(null);
 
   const displayCards = shuffledCards || cards;
 
@@ -15,6 +19,8 @@ function StudyCard() {
     setShuffledCards(null);
     setIndex(0);
     setIsFlipped(false);
+    setTyped('');
+    setGrade(null);
   }, [cards]);
 
   const handlersRef = useRef({});
@@ -43,19 +49,19 @@ function StudyCard() {
           break;
         case '1':
           event.preventDefault();
-          if (!h.studyAllMode) h.handleQuality(1);
+          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(1);
           break;
         case '2':
           event.preventDefault();
-          if (!h.studyAllMode) h.handleQuality(2);
+          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(2);
           break;
         case '3':
           event.preventDefault();
-          if (!h.studyAllMode) h.handleQuality(3);
+          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(3);
           break;
         case '4':
           event.preventDefault();
-          if (!h.studyAllMode) h.handleQuality(4);
+          if (!h.studyAllMode && h.answerMode === 'rate') h.handleQuality(4);
           break;
         default:
           break;
@@ -68,7 +74,14 @@ function StudyCard() {
     };
   }, []);
 
+  function resetPrompt() {
+    setIsFlipped(false);
+    setTyped('');
+    setGrade(null);
+  }
+
   function flipCard() {
+    if (answerMode === 'type' && !studyAllMode) return;
     setIsFlipped(!isFlipped);
   }
 
@@ -81,7 +94,7 @@ function StudyCard() {
       setIndex(nextId);
     }
 
-    setIsFlipped(false);
+    resetPrompt();
   }
 
   function prevCard() {
@@ -93,7 +106,7 @@ function StudyCard() {
       setIndex(nextId);
     }
 
-    setIsFlipped(false);
+    resetPrompt();
   }
 
   function shuffleCards() {
@@ -104,13 +117,13 @@ function StudyCard() {
     }
     setShuffledCards(copy);
     setIndex(0);
-    setIsFlipped(false);
+    resetPrompt();
   }
 
   function unshuffleCards() {
     setShuffledCards(null);
     setIndex(0);
-    setIsFlipped(false);
+    resetPrompt();
   }
 
   const safeIndex = Math.min(index, Math.max(displayCards.length - 1, 0));
@@ -130,11 +143,24 @@ function StudyCard() {
       const next = i + 1;
       return next >= displayCards.length ? 0 : next;
     });
-    setIsFlipped(false);
+    resetPrompt();
+  }
+
+  function submitTyped(event) {
+    event.preventDefault();
+    if (!currentCard || grade) return;
+    const result = gradeAnswer(typed, currentCard.back);
+    setGrade(result);
+    setIsFlipped(true);
+  }
+
+  function continueAfterGrade() {
+    if (!grade) return;
+    handleQuality(grade.quality);
   }
 
   useEffect(() => {
-    handlersRef.current = { flipCard, prevCard, nextCard, handleQuality, studyAllMode };
+    handlersRef.current = { flipCard, prevCard, nextCard, handleQuality, studyAllMode, answerMode };
   });
 
   if (loading) {
@@ -163,32 +189,58 @@ function StudyCard() {
     );
   }
 
+  const typeMode = !studyAllMode && answerMode === 'type';
+  const showBack = isFlipped || Boolean(grade);
+
   return (
     <div className="study-card-container">
       <div className="study-progress" aria-hidden="true">
         <div className="study-progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
+      {!studyAllMode && (
+        <div className="study-answer-toggle" role="tablist" aria-label="Answer mode">
+          <button
+            type="button"
+            className={answerMode === 'rate' ? 'active' : ''}
+            onClick={() => { setAnswerMode('rate'); setGrade(null); setTyped(''); }}
+          >
+            Rate
+          </button>
+          <button
+            type="button"
+            className={answerMode === 'type' ? 'active' : ''}
+            onClick={() => { setAnswerMode('type'); setIsFlipped(false); setGrade(null); setTyped(''); }}
+          >
+            Type
+          </button>
+        </div>
+      )}
+
       <div
         className="card-flip-wrapper"
-        onClick={flipCard}
+        onClick={typeMode ? undefined : flipCard}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') flipCard();
+          if (!typeMode && e.key === 'Enter') flipCard();
         }}
         role="button"
-        tabIndex={0}
-        aria-label={isFlipped ? 'Show front of card' : 'Show back of card'}
+        tabIndex={typeMode ? -1 : 0}
+        aria-label={showBack ? 'Show front of card' : 'Show back of card'}
       >
-        <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+        <div className={`card-flip-inner ${showBack ? 'flipped' : ''}`}>
           <div className="card-flip-front">
             <span className="card-flip-label">Front</span>
             <p>{currentCard.front}</p>
-            <span className="card-flip-hint">Click or press Space to flip</span>
+            <span className="card-flip-hint">
+              {typeMode ? 'Type the back below' : 'Click or press Space to flip'}
+            </span>
           </div>
           <div className="card-flip-back">
             <span className="card-flip-label">Back</span>
             <p>{currentCard.back}</p>
-            <span className="card-flip-hint">Rate below to schedule the next review</span>
+            <span className="card-flip-hint">
+              {typeMode ? 'Compared with what you typed' : 'Rate below to schedule the next review'}
+            </span>
           </div>
         </div>
       </div>
@@ -198,7 +250,7 @@ function StudyCard() {
         {shuffledCards ? ' · shuffled' : ''}
       </p>
 
-      {!studyAllMode && (
+      {!studyAllMode && answerMode === 'rate' && (
         <div className="quality-buttons" aria-label="How well did you remember?">
           <button type="button" className="quality-again" onClick={() => handleQuality(1)}>
             <span className="quality-key">1</span>
@@ -219,8 +271,32 @@ function StudyCard() {
         </div>
       )}
 
+      {typeMode && !grade && (
+        <form className="typed-answer-form" onSubmit={submitTyped}>
+          <label htmlFor="typed-answer">Your answer</label>
+          <input
+            id="typed-answer"
+            type="text"
+            value={typed}
+            autoComplete="off"
+            placeholder="Type the back of the card"
+            onChange={(e) => setTyped(e.target.value)}
+          />
+          <button type="submit">Check</button>
+        </form>
+      )}
+
+      {typeMode && grade && (
+        <div className="typed-grade">
+          <p>
+            Distance {grade.distance} → <strong>{grade.label}</strong> (quality {grade.quality})
+          </p>
+          <button type="button" onClick={continueAfterGrade}>Continue</button>
+        </div>
+      )}
+
       <div className="study-nav-buttons">
-        <button type="button" onClick={flipCard}>Flip</button>
+        {!typeMode && <button type="button" onClick={flipCard}>Flip</button>}
         <button type="button" onClick={prevCard}>Prev</button>
         <button type="button" onClick={nextCard}>Next</button>
         <button type="button" onClick={shuffledCards ? unshuffleCards : shuffleCards}>
@@ -229,8 +305,9 @@ function StudyCard() {
       </div>
 
       <p className="study-shortcuts">
-        Shortcuts: Space flip · ← → navigate
-        {!studyAllMode ? ' · 1–4 rate' : ''}
+        {typeMode
+          ? 'Type mode: Enter checks (when the field is focused) · ← → navigate'
+          : `Shortcuts: Space flip · ← → navigate${!studyAllMode ? ' · 1–4 rate' : ''}`}
       </p>
     </div>
   );
