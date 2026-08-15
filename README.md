@@ -29,17 +29,13 @@ React (Vite)  →  Express API  →  MongoDB
 
 ## Screenshots
 
-Replace the files in `docs/` with the shots listed at the bottom of this README (same names). Current images may still show the old purple UI.
+![Login — Quiet study](docs/login.png)
 
-![Login](docs/login.png)
+![Register — Create your desk](docs/register.png)
 
-![Register](docs/register.png)
+![My Cards — add, AI suggest, inverted-index search](docs/studyview.png)
 
-![Study (front — Flip)](docs/studyview.png)
-
-![My Cards — add, search, edit](docs/cards.png)
-
-![Stats — due counts and 7-day history](docs/stats.png)
+![Stats — due counts, 7-day bars, rating split](docs/stats.png)
 
 ---
 
@@ -134,20 +130,3 @@ shared/        SM-2, Levenshtein, inverted index (used by UI + API)
 docs/          README screenshots
 scripts/       start-mongo.sh (optional local mongod)
 ```
-
----
-
-## Screenshot checklist
-
-Save into `docs/` at **2×** (Retina) if you can. Window ~1280px wide, cream Desk theme visible, no bookmarks bar, no real email.
-
-| File | Screen | What to show |
-|------|--------|----------------|
-| `docs/thumbnail.png` | Study, **after Flip** | Back of a card. Again / Hard / Good / Easy with SM-2 labels (**1 min**, **1 day**, **1 day**, **1 day** on a new card). **No** Prev / Next / Shuffle. Log out in the **top right**, tabs only Study / My Cards / Stats. This is the README hero. |
-| `docs/login.png` | Log in | “Quiet study” / Welcome back. **Log in** control in the top-right header. Dummy email like `you@example.com`. |
-| `docs/register.png` | Register | “Create your desk”. Same header; Register highlighted or Log in link in the top right. |
-| `docs/studyview.png` | Study, **before Flip** | Front of the card, **Flip** only, “Due today · N cards”, Rate selected. Ratings hidden until flip. |
-| `docs/cards.png` | My Cards | Add New Card (Front / Back / AI Suggest) **and** the list with **Word search** filled in (e.g. `queue`) so inverted-index AND is obvious. 3+ CS-themed cards. |
-| `docs/stats.png` | Stats | Total / Due / New / Mastered plus **Last 7 days** bars and Again–Easy split. Rate a few cards first so the bars are not empty. |
-
-**How:** log in at `http://localhost:5173/my-project/` → macOS **⌘⇧4**, then **space**, click the browser window. Overwrite the files above (Git will show them as modified).
