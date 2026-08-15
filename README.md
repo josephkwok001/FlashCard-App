@@ -13,9 +13,6 @@ The Pages build is the UI only — register/study need the API (local or deploye
 
 - **JWT auth** — register / login, bcrypt (cost 10), cards scoped by `userId` on the token
 - **SM-2 scheduling** — Again / Hard / Good / Easy; same `shared/sm2.js` on the server and in the optimistic UI
-- **No skipping** — flip the card, then rate; Again requeues in **1 minute**
-- **Typed answers** — Levenshtein distance maps typos to SM-2 quality 1–4
-- **Inverted-index search** — tokenized front + back, AND of query terms
 - **Review history** — append-only `reviews` feeding last-7-days Stats
 - **Optional AI assist** — OpenRouter suggestion for a card back
 
@@ -101,9 +98,6 @@ More server detail: [SERVER_README.md](./SERVER_README.md)
 | Piece | Where | What it does |
 |-------|--------|----------------|
 | **SM-2** | `shared/sm2.js` | Passing grades: **1 day → 6 days → interval × ease**. Easy raises ease (later waits grow faster); Hard lowers it. **Again** resets the streak and sets `nextReview` to **+1 minute**. Quality buttons preview these delays. Used by `POST /api/cards/:id/rate` and the optimistic UI. |
-| **Levenshtein grading** | `shared/levenshtein.js` | Edit distance between typed answer and card back → SM-2 quality. Exact = Easy; relative distance ≤ 0.2 = Good; ≤ 0.4 = Hard; else Again. |
-| **Inverted index** | `shared/invertedIndex.js` | Tokenize front+back; query is AND of posting lists. |
-| **Review log** | `reviews` collection | Each rating appends `{ userId, cardId, quality, createdAt }`. Stats aggregates the last 7 days. |
 
 `npm test` runs `shared/*.test.js` (Node built-in test runner).
 
