@@ -87,8 +87,10 @@ function AppShell() {
 }
 
 function App() {
+  const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '/';
+
   return (
-    <BrowserRouter basename="/my-project">
+    <BrowserRouter basename={basename}>
       <CardProvider>
         <AppShell />
       </CardProvider>

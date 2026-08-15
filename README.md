@@ -2,7 +2,7 @@
 
 Spaced-repetition flashcards: React + Express + MongoDB, JWT auth, and SuperMemo **SM-2** shared by the API and the UI.
 
-**Live demo:** [GitHub Pages](https://josephkwok001.github.io/my-project/)  
+**Live demo:** [GitHub Pages](https://josephkwok001.github.io/FlashCard-App/)  
 The Pages build is the UI only — register/study need the API (local or deployed) pointed at MongoDB.
 
 ![Study — flipped card with SM-2 rating delays](docs/thumbnail.png)
@@ -43,7 +43,7 @@ React (Vite)  →  Express API  →  MongoDB
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 19, React Router, Vite (`basename /my-project`) |
+| Frontend | React 19, React Router, Vite |
 | Backend | Node.js, Express |
 | Database | MongoDB + Mongoose |
 | Auth | JWT + bcryptjs |
