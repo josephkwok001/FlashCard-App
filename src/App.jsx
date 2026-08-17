@@ -6,7 +6,7 @@ import StatsPage from './pages/StatsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import api, { getToken } from './services/api.js';
+import api, { getToken, isBrowserDemo } from './services/api.js';
 
 function ProtectedRoute({ children }) {
   if (!getToken()) {
@@ -62,8 +62,14 @@ function AppShell() {
           </nav>
         )}
 
-        {!isAuthPage && loading && (
+        {!isAuthPage && isLoggedIn && loading && (
           <p className="app-status" role="status">Preparing your desk…</p>
+        )}
+
+        {isBrowserDemo() && (
+          <p className="app-demo-banner" role="note">
+            Browser demo — SM-2 and your deck stay in this browser. There is no remote API on GitHub Pages.
+          </p>
         )}
 
         {!isAuthPage && error && (

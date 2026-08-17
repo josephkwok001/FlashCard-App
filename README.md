@@ -3,7 +3,7 @@
 Spaced-repetition flashcards: React + Express + MongoDB, JWT auth, and SuperMemo **SM-2** shared by the API and the UI.
 
 **Live demo:** [GitHub Pages](https://josephkwok001.github.io/FlashCard-App/)  
-The Pages build is the UI only — register/study need the API (local or deployed) pointed at MongoDB.
+Pages has no Express/Mongo host, so the live site runs a **browser demo** (localStorage + the same SM-2 scheduler). Tap **Try the desk** to study sample cards. Register/login on Pages also stay in this browser. For JWT + Mongo, run the API locally.
 
 ![Study — flipped card with SM-2 rating delays](docs/thumbnail.png)
 

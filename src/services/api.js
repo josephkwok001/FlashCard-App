@@ -1,8 +1,17 @@
+import { demoStore, isBrowserDemo, DEMO_TOKEN } from './demoStore.js';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const getToken = () => localStorage.getItem('token');
 const setToken = (token) => localStorage.setItem('token', token);
 const removeToken = () => localStorage.removeItem('token');
+
+if (typeof window !== 'undefined' && isBrowserDemo()) {
+  const existing = getToken();
+  if (existing && existing !== DEMO_TOKEN) {
+    removeToken();
+  }
+}
 
 function normalizeCard(card) {
   if (!card) return card;
@@ -28,8 +37,25 @@ async function readErrorMessage(response, fallback) {
   return error?.message || fallback;
 }
 
+function wrapNetwork(err, fallback) {
+  const msg = String(err?.message ?? err);
+  if (msg === 'Failed to fetch' || err?.name === 'TypeError') {
+    return new Error(
+      fallback || 'Cannot reach the API. Run npm run dev:server for local use.'
+    );
+  }
+  return err instanceof Error ? err : new Error(msg);
+}
+
 const api = {
+  startDemo: async () => {
+    const data = demoStore.start();
+    setToken(data.token);
+    return data;
+  },
+
   guestLogin: async () => {
+    if (isBrowserDemo()) return api.startDemo();
     const response = await fetch(`${API_BASE_URL}/auth/guest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -40,55 +66,79 @@ const api = {
     return data;
   },
 
-  // Real auth: only succeed if a token already exists (from login/register).
-  // No more automatic guest login.
   ensureAuth: async () => {
     if (getToken()) return;
     throw new Error('Please log in');
   },
 
   register: async (email, password, name) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name })
-    });
-    if (!response.ok) {
-      throw new Error(await readErrorMessage(response, 'Failed to register'));
+    if (isBrowserDemo()) {
+      const data = demoStore.register(email, password, name);
+      setToken(data.token);
+      return data;
     }
-    const data = await response.json();
-    if (data.token) setToken(data.token);
-    return data;
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, 'Failed to register'));
+      }
+      const data = await response.json();
+      if (data.token) setToken(data.token);
+      return data;
+    } catch (err) {
+      throw wrapNetwork(err);
+    }
   },
 
   login: async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    if (!response.ok) {
-      throw new Error(await readErrorMessage(response, 'Failed to log in'));
+    if (isBrowserDemo()) {
+      const data = demoStore.login(email, password);
+      setToken(data.token);
+      return data;
     }
-    const data = await response.json();
-    if (data.token) setToken(data.token);
-    return data;
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, 'Failed to log in'));
+      }
+      const data = await response.json();
+      if (data.token) setToken(data.token);
+      return data;
+    } catch (err) {
+      throw wrapNetwork(err);
+    }
   },
 
   logout: () => {
     removeToken();
   },
 
-
   getCards: async () => {
-    const response = await fetch(`${API_BASE_URL}/cards`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch cards');
-    return normalizeCards(await response.json());
+    if (isBrowserDemo()) return demoStore.getCards();
+    try {
+      const response = await fetch(`${API_BASE_URL}/cards`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch cards');
+      return normalizeCards(await response.json());
+    } catch (err) {
+      throw wrapNetwork(err, 'Failed to fetch cards');
+    }
   },
 
   getDueCards: async () => {
+    if (isBrowserDemo()) {
+      const now = Date.now();
+      return demoStore.getCards().filter((c) => new Date(c.nextReview).getTime() <= now);
+    }
     const response = await fetch(`${API_BASE_URL}/cards/due`, {
       headers: getAuthHeaders()
     });
@@ -97,19 +147,18 @@ const api = {
   },
 
   createCard: async (front, back) => {
-    const response = await fetch(`${API_BASE_URL}/cards`, { //
+    if (isBrowserDemo()) return demoStore.createCard(front, back);
+    const response = await fetch(`${API_BASE_URL}/cards`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ front, back })
     });
-
-    //  sends POST http://localhost:5001/api/cards with JSON { front, back } and a JWT
-
     if (!response.ok) throw new Error('Failed to create card');
     return normalizeCard(await response.json());
   },
 
   updateCard: async (id, front, back) => {
+    if (isBrowserDemo()) return demoStore.updateCard(id, front, back);
     const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -120,6 +169,7 @@ const api = {
   },
 
   deleteCard: async (id) => {
+    if (isBrowserDemo()) return demoStore.deleteCard(id);
     const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
@@ -129,6 +179,7 @@ const api = {
   },
 
   rateCard: async (id, quality) => {
+    if (isBrowserDemo()) return demoStore.rateCard(id, Number(quality));
     const response = await fetch(`${API_BASE_URL}/cards/${id}/rate`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -139,6 +190,7 @@ const api = {
   },
 
   getReviewStats: async (days = 7) => {
+    if (isBrowserDemo()) return demoStore.getReviewStats(days);
     const response = await fetch(`${API_BASE_URL}/reviews/stats?days=${days}`, {
       headers: getAuthHeaders()
     });
@@ -147,6 +199,9 @@ const api = {
   },
 
   getSuggestion: async (front) => {
+    if (isBrowserDemo()) {
+      throw new Error('AI Suggest needs the Express API — not available in this browser demo.');
+    }
     const response = await fetch(`${API_BASE_URL}/ai/suggest`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -160,6 +215,7 @@ const api = {
   },
 
   healthCheck: async () => {
+    if (isBrowserDemo()) return { message: 'Browser demo' };
     const base = API_BASE_URL.replace(/\/api\/?$/, '');
     const response = await fetch(`${base}/`);
     if (!response.ok) throw new Error('Backend not reachable');
@@ -169,3 +225,4 @@ const api = {
 
 export default api;
 export { getToken, setToken, removeToken };
+export { isBrowserDemo, DEMO_TOKEN } from './demoStore.js';

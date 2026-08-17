@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../services/api.js';
+import api, { isBrowserDemo } from '../services/api.js';
 import { useCards } from '../context/CardContext';
 
 function RegisterPage() {
@@ -27,13 +27,37 @@ function RegisterPage() {
     }
   }
 
+  async function handleTryDemo() {
+    setError('');
+    setLoading(true);
+    try {
+      await api.startDemo();
+      await reloadCards();
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="auth-panel">
       <div className="auth-panel-header">
         <p className="auth-eyebrow">Quiet study</p>
         <h2>Create your desk</h2>
-        <p className="auth-subtitle">A private deck with spaced repetition — yours alone.</p>
+        <p className="auth-subtitle">
+          {isBrowserDemo()
+            ? 'This Pages demo stores an account only in your browser. For the real API, run the app locally.'
+            : 'A private deck with spaced repetition — yours alone.'}
+        </p>
       </div>
+
+      {isBrowserDemo() && (
+        <button type="button" className="auth-submit" onClick={handleTryDemo} disabled={loading}>
+          {loading ? 'Opening desk…' : 'Try the desk'}
+        </button>
+      )}
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="auth-field">

@@ -9,7 +9,7 @@ const CardContext = createContext();
 function CardProvider({ children }) {
 
   const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(getToken()));
   const [error, setError] = useState(null);
   const [studyAllMode, setStudyAllMode] = useState(false);
   const [clock, setClock] = useState(() => Date.now());

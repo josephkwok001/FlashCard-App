@@ -642,6 +642,10 @@ button:active {
     margin-bottom: 24px;
 }
 
+.auth-panel-header + .auth-submit {
+    margin-bottom: 18px;
+}
+
 .auth-eyebrow {
     color: var(--accent);
     font-size: 0.78rem;
@@ -747,6 +751,17 @@ button:active {
     font-size: 0.9rem;
     text-align: center;
     font-style: italic;
+}
+
+.app-demo-banner {
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    background: var(--accent-soft);
+    border: 1px solid #c5d9cc;
+    border-radius: 10px;
 }
 
 .app-error {
