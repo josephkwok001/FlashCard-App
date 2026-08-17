@@ -1,4 +1,4 @@
-import { demoStore, isBrowserDemo, DEMO_TOKEN } from './demoStore.js';
+import { demoStore, isBrowserDemo, isDemoToken } from './demoStore.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -8,7 +8,7 @@ const removeToken = () => localStorage.removeItem('token');
 
 if (typeof window !== 'undefined' && isBrowserDemo()) {
   const existing = getToken();
-  if (existing && existing !== DEMO_TOKEN) {
+  if (existing && !isDemoToken(existing)) {
     removeToken();
   }
 }
@@ -225,4 +225,4 @@ const api = {
 
 export default api;
 export { getToken, setToken, removeToken };
-export { isBrowserDemo, DEMO_TOKEN } from './demoStore.js';
+export { isBrowserDemo } from './demoStore.js';

@@ -1,12 +1,9 @@
 import { scheduleReview } from '../../shared/sm2.js';
 
-export const DEMO_TOKEN = 'desk-demo';
+export const DEMO_TOKEN_PREFIX = 'desk-demo:';
 
 const KEYS = {
-  cards: 'desk-demo-cards',
-  reviews: 'desk-demo-reviews',
-  users: 'desk-demo-users',
-  seeded: 'desk-demo-seeded'
+  users: 'desk-demo-users'
 };
 
 const SEED_CARDS = [
@@ -76,24 +73,61 @@ export function isBrowserDemo() {
   return noRemoteApi && /\.github\.io$/i.test(host);
 }
 
-function ensureSeed() {
-  if (localStorage.getItem(KEYS.seeded) === '1' && readJson(KEYS.cards, []).length > 0) {
-    return;
-  }
-  const cards = SEED_CARDS.map((c) => makeCard(c.front, c.back));
-  writeJson(KEYS.cards, cards);
-  if (!readJson(KEYS.reviews, null)) writeJson(KEYS.reviews, []);
-  localStorage.setItem(KEYS.seeded, '1');
+export function isDemoToken(token) {
+  return Boolean(token) && token.startsWith(DEMO_TOKEN_PREFIX);
+}
+
+function tokenFor(userId) {
+  return `${DEMO_TOKEN_PREFIX}${userId}`;
+}
+
+function sessionUserId() {
+  const token = localStorage.getItem('token') || '';
+  if (!isDemoToken(token)) return null;
+  return token.slice(DEMO_TOKEN_PREFIX.length);
+}
+
+function cardsKey(userId) {
+  return `desk-demo-cards:${userId}`;
+}
+
+function reviewsKey(userId) {
+  return `desk-demo-reviews:${userId}`;
+}
+
+function requireUserId() {
+  const userId = sessionUserId();
+  if (!userId) throw new Error('Please log in');
+  return userId;
+}
+
+function loadUsers() {
+  const users = readJson(KEYS.users, []);
+  let changed = false;
+  const migrated = users.map((user) => {
+    if (user.id) return user;
+    changed = true;
+    return { ...user, id: newId() };
+  });
+  if (changed) writeJson(KEYS.users, migrated);
+  return migrated;
+}
+
+function seedForUser(userId) {
+  if (readJson(cardsKey(userId), []).length > 0) return;
+  writeJson(cardsKey(userId), SEED_CARDS.map((c) => makeCard(c.front, c.back)));
+  if (!readJson(reviewsKey(userId), null)) writeJson(reviewsKey(userId), []);
 }
 
 export const demoStore = {
   start() {
-    ensureSeed();
-    return { token: DEMO_TOKEN, user: { id: 'demo', name: 'Demo' } };
+    const userId = 'guest';
+    seedForUser(userId);
+    return { token: tokenFor(userId), user: { id: userId, name: 'Demo' } };
   },
 
   register(email, password, name) {
-    const users = readJson(KEYS.users, []);
+    const users = loadUsers();
     const normalized = String(email || '').trim().toLowerCase();
     if (!normalized || !password) {
       throw new Error('Email and password are required');
@@ -104,50 +138,71 @@ export const demoStore = {
     if (users.some((u) => u.email === normalized)) {
       throw new Error('An account with that email already exists');
     }
-    users.push({ email: normalized, password, name: name || 'Learner' });
+
+    const user = {
+      id: newId(),
+      email: normalized,
+      password,
+      name: name || 'Learner'
+    };
+    users.push(user);
     writeJson(KEYS.users, users);
-    ensureSeed();
-    return { token: DEMO_TOKEN, user: { id: 'demo', name: name || 'Learner', email: normalized } };
+    seedForUser(user.id);
+    return {
+      token: tokenFor(user.id),
+      user: { id: user.id, name: user.name, email: user.email }
+    };
   },
 
   login(email, password) {
-    const users = readJson(KEYS.users, []);
+    const users = loadUsers();
     const normalized = String(email || '').trim().toLowerCase();
     const user = users.find((u) => u.email === normalized && u.password === password);
     if (!user) {
       throw new Error('Invalid email or password');
     }
-    ensureSeed();
-    return { token: DEMO_TOKEN, user: { id: 'demo', name: user.name, email: user.email } };
+    if (readJson(cardsKey(user.id), []).length === 0) {
+      seedForUser(user.id);
+    }
+    return {
+      token: tokenFor(user.id),
+      user: { id: user.id, name: user.name, email: user.email }
+    };
   },
 
   getCards() {
-    ensureSeed();
-    return readJson(KEYS.cards, []);
+    return readJson(cardsKey(requireUserId()), []);
   },
 
   createCard(front, back) {
-    const cards = readJson(KEYS.cards, []);
+    const userId = requireUserId();
+    const cards = readJson(cardsKey(userId), []);
     const card = makeCard(front, back);
     cards.unshift(card);
-    writeJson(KEYS.cards, cards);
+    writeJson(cardsKey(userId), cards);
     return card;
   },
 
   updateCard(id, front, back) {
-    const cards = readJson(KEYS.cards, []);
+    const userId = requireUserId();
+    const cards = readJson(cardsKey(userId), []);
     const next = cards.map((c) => (c.id === id ? { ...c, front, back } : c));
-    writeJson(KEYS.cards, next);
+    writeJson(cardsKey(userId), next);
     return next.find((c) => c.id === id);
   },
 
   deleteCard(id) {
-    writeJson(KEYS.cards, readJson(KEYS.cards, []).filter((c) => c.id !== id));
+    const userId = requireUserId();
+    writeJson(
+      cardsKey(userId),
+      readJson(cardsKey(userId), []).filter((c) => c.id !== id)
+    );
     return { message: 'Card deleted successfully' };
   },
 
   rateCard(id, quality) {
-    const cards = readJson(KEYS.cards, []);
+    const userId = requireUserId();
+    const cards = readJson(cardsKey(userId), []);
     const index = cards.findIndex((c) => c.id === id);
     if (index < 0) throw new Error('Card not found');
     const card = cards[index];
@@ -165,17 +220,18 @@ export const demoStore = {
       nextReview: schedule.nextReview.toISOString()
     };
     cards[index] = updated;
-    writeJson(KEYS.cards, cards);
+    writeJson(cardsKey(userId), cards);
 
-    const reviews = readJson(KEYS.reviews, []);
+    const reviews = readJson(reviewsKey(userId), []);
     reviews.push({ cardId: id, quality, createdAt: nowIso() });
-    writeJson(KEYS.reviews, reviews);
+    writeJson(reviewsKey(userId), reviews);
     return updated;
   },
 
   getReviewStats(days = 7) {
+    const userId = requireUserId();
     const span = Math.min(Math.max(Number(days) || 7, 1), 90);
-    const reviews = readJson(KEYS.reviews, []);
+    const reviews = readJson(reviewsKey(userId), []);
     const now = new Date();
     const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     since.setUTCDate(since.getUTCDate() - (span - 1));

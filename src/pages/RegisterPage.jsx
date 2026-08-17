@@ -5,7 +5,7 @@ import { useCards } from '../context/CardContext';
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const { reloadCards } = useCards();
+  const { reloadCards, clearCards } = useCards();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +18,7 @@ function RegisterPage() {
     setLoading(true);
     try {
       await api.register(email, password, name);
+      clearCards();
       await reloadCards();
       navigate('/');
     } catch (err) {
@@ -32,6 +33,7 @@ function RegisterPage() {
     setLoading(true);
     try {
       await api.startDemo();
+      clearCards();
       await reloadCards();
       navigate('/');
     } catch (err) {

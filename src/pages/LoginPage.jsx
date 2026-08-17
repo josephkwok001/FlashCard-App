@@ -5,7 +5,7 @@ import { useCards } from '../context/CardContext';
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { reloadCards } = useCards();
+  const { reloadCards, clearCards } = useCards();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,6 +17,7 @@ function LoginPage() {
     setLoading(true);
     try {
       await api.login(email, password);
+      clearCards();
       await reloadCards();
       navigate('/');
     } catch (err) {
@@ -31,6 +32,7 @@ function LoginPage() {
     setLoading(true);
     try {
       await api.startDemo();
+      clearCards();
       await reloadCards();
       navigate('/');
     } catch (err) {

@@ -17,7 +17,11 @@ const auth = (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret');
-      req.user = decoded;
+      const id = decoded.id || decoded._id;
+      if (!id) {
+        return res.status(401).json({ message: 'Token is not valid' });
+      }
+      req.user = { id: String(id) };
       next();
     } catch (err) {
       return res.status(401).json({ message: 'Token is not valid' });
