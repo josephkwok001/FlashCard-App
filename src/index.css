@@ -98,6 +98,15 @@ input {
     flex-shrink: 0;
 }
 
+.app-account-email {
+    color: var(--ink-muted);
+    font-size: 0.8rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .app-account-link,
 .app-account-logout,
 .app-account-register {

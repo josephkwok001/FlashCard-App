@@ -16,6 +16,19 @@ function CardProvider({ children }) {
 
   useEffect(() => {
     initCards();
+
+    function onAuth() {
+      if (!getToken()) {
+        setCards([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      loadCards();
+    }
+
+    window.addEventListener('desk-auth', onAuth);
+    return () => window.removeEventListener('desk-auth', onAuth);
   }, []);
 
   async function initCards() {

@@ -6,7 +6,7 @@ import StatsPage from './pages/StatsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import api, { getToken, isBrowserDemo } from './services/api.js';
+import api, { getToken, getSessionUser, isBrowserDemo } from './services/api.js';
 
 function ProtectedRoute({ children }) {
   if (!getToken()) {
@@ -20,6 +20,7 @@ function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const sessionUser = getSessionUser();
   const isLoggedIn = Boolean(getToken());
 
   function handleLogout() {
@@ -37,9 +38,14 @@ function AppShell() {
         </Link>
         <div className="app-account">
           {isLoggedIn ? (
-            <button type="button" className="app-account-logout" onClick={handleLogout}>
-              Log out
-            </button>
+            <>
+              {sessionUser?.email && (
+                <span className="app-account-email">{sessionUser.email}</span>
+              )}
+              <button type="button" className="app-account-logout" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
           ) : (
             <>
               {location.pathname !== '/login' && (

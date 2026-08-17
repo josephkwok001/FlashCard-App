@@ -2,9 +2,25 @@ import { demoStore, isBrowserDemo, isDemoToken } from './demoStore.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
+const USER_KEY = 'desk-session-user';
+
 const getToken = () => localStorage.getItem('token');
 const setToken = (token) => localStorage.setItem('token', token);
 const removeToken = () => localStorage.removeItem('token');
+const getSessionUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+  } catch {
+    return null;
+  }
+};
+function setSessionUser(user) {
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  else localStorage.removeItem(USER_KEY);
+}
+function notifyAuth() {
+  window.dispatchEvent(new Event('desk-auth'));
+}
 
 if (typeof window !== 'undefined' && isBrowserDemo()) {
   const existing = getToken();
@@ -51,6 +67,8 @@ const api = {
   startDemo: async () => {
     const data = demoStore.start();
     setToken(data.token);
+    setSessionUser(data.user);
+    notifyAuth();
     return data;
   },
 
@@ -75,6 +93,8 @@ const api = {
     if (isBrowserDemo()) {
       const data = demoStore.register(email, password, name);
       setToken(data.token);
+      setSessionUser(data.user);
+      notifyAuth();
       return data;
     }
     try {
@@ -88,6 +108,8 @@ const api = {
       }
       const data = await response.json();
       if (data.token) setToken(data.token);
+      setSessionUser(data.user);
+      notifyAuth();
       return data;
     } catch (err) {
       throw wrapNetwork(err);
@@ -98,6 +120,8 @@ const api = {
     if (isBrowserDemo()) {
       const data = demoStore.login(email, password);
       setToken(data.token);
+      setSessionUser(data.user);
+      notifyAuth();
       return data;
     }
     try {
@@ -111,6 +135,8 @@ const api = {
       }
       const data = await response.json();
       if (data.token) setToken(data.token);
+      setSessionUser(data.user);
+      notifyAuth();
       return data;
     } catch (err) {
       throw wrapNetwork(err);
@@ -119,6 +145,8 @@ const api = {
 
   logout: () => {
     removeToken();
+    setSessionUser(null);
+    notifyAuth();
   },
 
   getCards: async () => {
@@ -224,5 +252,5 @@ const api = {
 };
 
 export default api;
-export { getToken, setToken, removeToken };
+export { getToken, setToken, removeToken, getSessionUser };
 export { isBrowserDemo } from './demoStore.js';

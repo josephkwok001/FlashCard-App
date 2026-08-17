@@ -147,7 +147,8 @@ export const demoStore = {
     };
     users.push(user);
     writeJson(KEYS.users, users);
-    seedForUser(user.id);
+    writeJson(cardsKey(user.id), []);
+    writeJson(reviewsKey(user.id), []);
     return {
       token: tokenFor(user.id),
       user: { id: user.id, name: user.name, email: user.email }
@@ -161,9 +162,6 @@ export const demoStore = {
     if (!user) {
       throw new Error('Invalid email or password');
     }
-    if (readJson(cardsKey(user.id), []).length === 0) {
-      seedForUser(user.id);
-    }
     return {
       token: tokenFor(user.id),
       user: { id: user.id, name: user.name, email: user.email }
@@ -171,13 +169,14 @@ export const demoStore = {
   },
 
   getCards() {
-    return readJson(cardsKey(requireUserId()), []);
+    const userId = requireUserId();
+    return readJson(cardsKey(userId), []).filter((card) => !card.userId || card.userId === userId);
   },
 
   createCard(front, back) {
     const userId = requireUserId();
     const cards = readJson(cardsKey(userId), []);
-    const card = makeCard(front, back);
+    const card = makeCard(front, back, { userId });
     cards.unshift(card);
     writeJson(cardsKey(userId), cards);
     return card;
