@@ -18,6 +18,7 @@ test('front token matches one card', () => {
   assert.deepEqual(hits.map((c) => c.id), ['1']);
 });
 
+
 test('back token matches (front-only includes would miss this)', () => {
   const index = buildIndex(cards);
   const hits = search(index, 'glucose', cards);
